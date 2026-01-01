@@ -342,3 +342,19 @@
   transform: scale(1.01);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }
+
+/* Image size variants based on title attribute */
+.prose img[title="container"] {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.prose img[title="full"] {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  border-radius: 0;
+}

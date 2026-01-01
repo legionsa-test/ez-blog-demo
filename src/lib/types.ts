@@ -6,6 +6,7 @@ export interface Post {
   content: string;
   coverImage: string;
   coverImageSize?: 'small' | 'big' | 'hidden';
+  coverImageAlt?: string;
   author: Author;
   tags: string[];
   categoryId: string | null;

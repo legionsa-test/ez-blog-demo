@@ -14,6 +14,7 @@ import { TableOfContents } from '@/components/table-of-contents';
 import { ReadingProgress } from '@/components/reading-progress';
 import { ShareButtons } from '@/components/share-buttons';
 import { ImageLightbox, useLightbox } from '@/components/image-lightbox';
+import { Footer } from '@/components/layout/footer';
 import { getPostBySlug, getPublishedPosts } from '@/lib/storage';
 import { incrementViewCount, getViewCount, updateReadingHistory } from '@/lib/analytics';
 import { generatePostJsonLd, generateBreadcrumbJsonLd } from '@/lib/json-ld';
@@ -279,7 +280,7 @@ export default function BlogPostPage() {
                 </div>
 
                 {/* Bottom Navigation - Right after article content */}
-                <div className="border-t border-border/40">
+                <div className="border-b border-border/40">
                     <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
                         <Button asChild variant="ghost" size="sm">
                             <Link href="/">
@@ -339,6 +340,7 @@ export default function BlogPostPage() {
                     </section>
                 )}
             </article>
+            <Footer />
 
             {/* Image Lightbox */}
             {lightboxImage && (

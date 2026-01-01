@@ -59,6 +59,7 @@ export default function NewPostPage() {
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [unsplashOpen, setUnsplashOpen] = useState(false);
     const [coverImageSize, setCoverImageSize] = useState<'small' | 'big' | 'hidden'>('small');
+    const [coverImageAlt, setCoverImageAlt] = useState('');
     const [coverImageTab, setCoverImageTab] = useState<'url' | 'unsplash'>('url');
 
     // Load categories and authors
@@ -167,6 +168,7 @@ export default function NewPostPage() {
                 content,
                 coverImage: coverImage.trim(),
                 coverImageSize,
+                coverImageAlt: coverImageAlt.trim(),
                 tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
                 categoryId: categoryId || null,
                 scheduledAt: scheduledAt || null,
@@ -294,39 +296,55 @@ export default function NewPostPage() {
                                 >
                                     Direct URL
                                 </button>
-                                {isUnsplashConfigured() && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setCoverImageTab('unsplash')}
-                                        className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'unsplash'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                            }`}
-                                    >
-                                        Unsplash
-                                    </button>
-                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setCoverImageTab('unsplash')}
+                                    className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'unsplash'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    Unsplash
+                                </button>
                             </div>
 
                             {/* URL Input */}
                             {coverImageTab === 'url' && (
-                                <Input
-                                    value={coverImage}
-                                    onChange={(e) => setCoverImage(e.target.value)}
-                                    placeholder="https://example.com/image.jpg"
-                                />
+                                <div className="space-y-3">
+                                    <Input
+                                        value={coverImage}
+                                        onChange={(e) => setCoverImage(e.target.value)}
+                                        placeholder="https://example.com/image.jpg"
+                                    />
+                                    <div className="space-y-1">
+                                        <Label htmlFor="cover-alt" className="text-xs text-muted-foreground">Alt Text</Label>
+                                        <Input
+                                            id="cover-alt"
+                                            value={coverImageAlt}
+                                            onChange={(e) => setCoverImageAlt(e.target.value)}
+                                            placeholder="Describe the image for accessibility"
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                </div>
                             )}
 
                             {/* Unsplash Search Button */}
-                            {coverImageTab === 'unsplash' && isUnsplashConfigured() && (
-                                <Button
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => setUnsplashOpen(true)}
-                                >
-                                    <ImageIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-                                    Search Unsplash
-                                </Button>
+                            {coverImageTab === 'unsplash' && (
+                                isUnsplashConfigured() ? (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => setUnsplashOpen(true)}
+                                    >
+                                        <ImageIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+                                        Search Unsplash
+                                    </Button>
+                                ) : (
+                                    <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                                        Unsplash is not configured. Please add your credentials in .env
+                                    </div>
+                                )
                             )}
 
                             {/* Image Preview */}
@@ -339,7 +357,10 @@ export default function NewPostPage() {
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => setCoverImage('')}
+                                        onClick={() => {
+                                            setCoverImage('');
+                                            setCoverImageAlt('');
+                                        }}
                                         className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
                                         aria-label="Remove image"
                                     >
@@ -493,11 +514,13 @@ export default function NewPostPage() {
             </div>
 
             {/* Unsplash Picker */}
+            {/* Unsplash Picker */}
             <UnsplashPicker
                 open={unsplashOpen}
                 onOpenChange={setUnsplashOpen}
                 onSelect={(photo) => {
                     setCoverImage(photo.urls.regular);
+                    setCoverImageAlt(photo.alt_description || '');
                     setUnsplashOpen(false);
                 }}
             />

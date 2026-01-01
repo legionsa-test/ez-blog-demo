@@ -19,6 +19,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { TiptapEditor } from '@/components/editor/tiptap-editor';
+import { UnsplashPicker } from '@/components/editor/unsplash-picker';
+import { isUnsplashConfigured } from '@/lib/unsplash';
 import { getPostById, savePost, deletePost } from '@/lib/storage';
 import { Post } from '@/lib/types';
 import { toast } from 'sonner';
@@ -38,7 +40,9 @@ export default function EditPostPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [unsplashOpen, setUnsplashOpen] = useState(false);
     const [coverImageSize, setCoverImageSize] = useState<'small' | 'big' | 'hidden'>('small');
+    const [coverImageAlt, setCoverImageAlt] = useState('');
     const [coverImageTab, setCoverImageTab] = useState<'url' | 'unsplash'>('url');
 
     useEffect(() => {
@@ -49,6 +53,7 @@ export default function EditPostPage() {
             setExcerpt(foundPost.excerpt);
             setContent(foundPost.content);
             setCoverImage(foundPost.coverImage);
+            setCoverImageAlt(foundPost.coverImageAlt || '');
             setCoverImageSize(foundPost.coverImageSize || 'small');
             setTags(foundPost.tags.join(', '));
             setIsPublished(foundPost.status === 'published');
@@ -73,6 +78,7 @@ export default function EditPostPage() {
                 content,
                 coverImage: coverImage.trim(),
                 coverImageSize,
+                coverImageAlt: coverImageAlt.trim(),
                 tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
                 status: isPublished ? 'published' : 'draft',
             });
@@ -202,8 +208,8 @@ export default function EditPostPage() {
                                     type="button"
                                     onClick={() => setCoverImageTab('url')}
                                     className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'url'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-muted-foreground hover:text-foreground'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     Direct URL
@@ -212,8 +218,8 @@ export default function EditPostPage() {
                                     type="button"
                                     onClick={() => setCoverImageTab('unsplash')}
                                     className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'unsplash'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'text-muted-foreground hover:text-foreground'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     Unsplash
@@ -222,18 +228,35 @@ export default function EditPostPage() {
 
                             {/* URL Input */}
                             {coverImageTab === 'url' && (
-                                <Input
-                                    value={coverImage}
-                                    onChange={(e) => setCoverImage(e.target.value)}
-                                    placeholder="https://example.com/image.jpg"
-                                />
+                                <div className="space-y-3">
+                                    <Input
+                                        value={coverImage}
+                                        onChange={(e) => setCoverImage(e.target.value)}
+                                        placeholder="https://example.com/image.jpg"
+                                    />
+                                    <div className="space-y-1">
+                                        <Label htmlFor="cover-alt" className="text-xs text-muted-foreground">Alt Text</Label>
+                                        <Input
+                                            id="cover-alt"
+                                            value={coverImageAlt}
+                                            onChange={(e) => setCoverImageAlt(e.target.value)}
+                                            placeholder="Describe the image for accessibility"
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                </div>
                             )}
 
-                            {/* Unsplash placeholder */}
-                            {coverImageTab === 'unsplash' && (
-                                <p className="text-sm text-muted-foreground text-center py-4">
-                                    Unsplash search available in new post editor
-                                </p>
+                            {/* Unsplash Search Button */}
+                            {coverImageTab === 'unsplash' && isUnsplashConfigured() && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => setUnsplashOpen(true)}
+                                >
+                                    <ImageIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+                                    Search Unsplash
+                                </Button>
                             )}
 
                             {/* Image Preview */}
@@ -246,7 +269,10 @@ export default function EditPostPage() {
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => setCoverImage('')}
+                                        onClick={() => {
+                                            setCoverImage('');
+                                            setCoverImageAlt('');
+                                        }}
                                         className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
                                         aria-label="Remove image"
                                     >
@@ -264,8 +290,8 @@ export default function EditPostPage() {
                                             type="button"
                                             onClick={() => setCoverImageSize('big')}
                                             className={`rounded-md border px-2 py-2 text-xs transition-colors ${coverImageSize === 'big'
-                                                    ? 'border-primary bg-primary/10 text-primary'
-                                                    : 'border-border hover:bg-muted'
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-border hover:bg-muted'
                                                 }`}
                                         >
                                             Big
@@ -274,8 +300,8 @@ export default function EditPostPage() {
                                             type="button"
                                             onClick={() => setCoverImageSize('small')}
                                             className={`rounded-md border px-2 py-2 text-xs transition-colors ${coverImageSize === 'small'
-                                                    ? 'border-primary bg-primary/10 text-primary'
-                                                    : 'border-border hover:bg-muted'
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-border hover:bg-muted'
                                                 }`}
                                         >
                                             Small
@@ -284,8 +310,8 @@ export default function EditPostPage() {
                                             type="button"
                                             onClick={() => setCoverImageSize('hidden')}
                                             className={`rounded-md border px-2 py-2 text-xs transition-colors ${coverImageSize === 'hidden'
-                                                    ? 'border-primary bg-primary/10 text-primary'
-                                                    : 'border-border hover:bg-muted'
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-border hover:bg-muted'
                                                 }`}
                                         >
                                             Hide
@@ -336,6 +362,17 @@ export default function EditPostPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Unsplash Picker */}
+            <UnsplashPicker
+                open={unsplashOpen}
+                onOpenChange={setUnsplashOpen}
+                onSelect={(photo) => {
+                    setCoverImage(photo.urls.regular);
+                    setCoverImageAlt(photo.alt_description || '');
+                    setUnsplashOpen(false);
+                }}
+            />
         </div>
     );
 }
