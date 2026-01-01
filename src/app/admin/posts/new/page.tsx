@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, CloudOff, Cloud, Calendar, ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, CloudOff, Cloud, Calendar, ImageIcon, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +58,8 @@ export default function NewPostPage() {
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [unsplashOpen, setUnsplashOpen] = useState(false);
+    const [coverImageSize, setCoverImageSize] = useState<'small' | 'big' | 'hidden'>('small');
+    const [coverImageTab, setCoverImageTab] = useState<'url' | 'unsplash'>('url');
 
     // Load categories and authors
     useEffect(() => {
@@ -164,6 +166,7 @@ export default function NewPostPage() {
                 excerpt: excerpt.trim(),
                 content,
                 coverImage: coverImage.trim(),
+                coverImageSize,
                 tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
                 categoryId: categoryId || null,
                 scheduledAt: scheduledAt || null,
@@ -279,12 +282,43 @@ export default function NewPostPage() {
                             <CardTitle className="text-base">Cover Image</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <Input
-                                value={coverImage}
-                                onChange={(e) => setCoverImage(e.target.value)}
-                                placeholder="https://example.com/image.jpg"
-                            />
-                            {isUnsplashConfigured() && (
+                            {/* Tabs for URL or Unsplash */}
+                            <div className="flex rounded-lg border border-border p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setCoverImageTab('url')}
+                                    className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'url'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    Direct URL
+                                </button>
+                                {isUnsplashConfigured() && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCoverImageTab('unsplash')}
+                                        className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'unsplash'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        Unsplash
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* URL Input */}
+                            {coverImageTab === 'url' && (
+                                <Input
+                                    value={coverImage}
+                                    onChange={(e) => setCoverImage(e.target.value)}
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                            )}
+
+                            {/* Unsplash Search Button */}
+                            {coverImageTab === 'unsplash' && isUnsplashConfigured() && (
                                 <Button
                                     variant="outline"
                                     className="w-full"
@@ -294,6 +328,8 @@ export default function NewPostPage() {
                                     Search Unsplash
                                 </Button>
                             )}
+
+                            {/* Image Preview */}
                             {coverImage && (
                                 <div className="relative aspect-video overflow-hidden rounded-lg border border-border">
                                     <img
@@ -301,6 +337,56 @@ export default function NewPostPage() {
                                         alt="Cover preview"
                                         className="h-full w-full object-cover"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setCoverImage('')}
+                                        className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                                        aria-label="Remove image"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Display Options */}
+                            {coverImage && (
+                                <div className="space-y-2">
+                                    <Label>Homepage Display</Label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCoverImageSize('big')}
+                                            className={`rounded-md border px-2 py-2 text-xs transition-colors ${coverImageSize === 'big'
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-border hover:bg-muted'
+                                                }`}
+                                        >
+                                            Big
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCoverImageSize('small')}
+                                            className={`rounded-md border px-2 py-2 text-xs transition-colors ${coverImageSize === 'small'
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-border hover:bg-muted'
+                                                }`}
+                                        >
+                                            Small
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCoverImageSize('hidden')}
+                                            className={`rounded-md border px-2 py-2 text-xs transition-colors ${coverImageSize === 'hidden'
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-border hover:bg-muted'
+                                                }`}
+                                        >
+                                            Hide
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Controls how the image appears on the homepage
+                                    </p>
                                 </div>
                             )}
                         </CardContent>

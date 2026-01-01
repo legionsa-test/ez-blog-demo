@@ -100,9 +100,15 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
         },
     });
 
-    const handleInsertImage = (url: string, alt?: string) => {
+    const handleInsertImage = (url: string, alt?: string, size: 'default' | 'container' | 'full' = 'default') => {
         if (editor) {
-            editor.chain().focus().setImage({ src: url, alt: alt || '' }).run();
+            // Insert image with custom class based on size
+            const sizeClass = size === 'full' ? 'image-full' : size === 'container' ? 'image-container' : '';
+            editor.chain().focus().setImage({
+                src: url,
+                alt: alt || '',
+                title: size // Store size in title temporarily for CSS targeting
+            }).run();
             trackMediaUsage(url, alt);
         }
     };
@@ -151,8 +157,8 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
             <ImageUrlDialog
                 open={showImageUrl}
                 onOpenChange={setShowImageUrl}
-                onInsert={(url, alt) => {
-                    handleInsertImage(url, alt);
+                onInsert={(url, alt, size) => {
+                    handleInsertImage(url, alt, size);
                     setShowImageUrl(false);
                 }}
             />

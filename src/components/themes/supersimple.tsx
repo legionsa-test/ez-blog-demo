@@ -195,30 +195,56 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                         <h2 className="mb-6 text-xs font-medium uppercase tracking-widest text-muted-foreground">
                             Published Posts
                         </h2>
-                        <div className="divide-y divide-border/40">
+                        <div className="space-y-4">
                             {archivePosts.map((post) => (
-                                <Link
-                                    key={post.id}
-                                    href={`/blog/${post.slug}`}
-                                    className="group flex items-center gap-4 py-4 transition-colors hover:text-primary"
-                                >
-                                    {post.coverImage && (
-                                        <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded">
+                                post.coverImageSize === 'big' && post.coverImage ? (
+                                    // Big image layout - card style
+                                    <Link
+                                        key={post.id}
+                                        href={`/blog/${post.slug}`}
+                                        className="group block overflow-hidden rounded-lg border border-border/60 transition-all hover:border-foreground/20"
+                                    >
+                                        <div className="relative aspect-[16/9] w-full overflow-hidden">
                                             <Image
                                                 src={post.coverImage}
                                                 alt={post.title}
                                                 fill
-                                                className="object-cover"
+                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
                                         </div>
-                                    )}
-                                    <div className="flex flex-1 items-baseline justify-between">
-                                        <span className="font-medium">{post.title}</span>
-                                        <span className="ml-4 shrink-0 text-sm text-muted-foreground">
-                                            {format(new Date(post.publishedAt || post.createdAt), 'MMM d, yyyy')}
-                                        </span>
-                                    </div>
-                                </Link>
+                                        <div className="p-4">
+                                            <h3 className="font-semibold group-hover:text-primary">{post.title}</h3>
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                {post.excerpt}
+                                            </p>
+                                        </div>
+                                    </Link>
+                                ) : (
+                                    // Small/hidden image layout - inline style
+                                    <Link
+                                        key={post.id}
+                                        href={`/blog/${post.slug}`}
+                                        className="group flex items-center gap-4 border-b border-border/40 py-4 transition-colors hover:text-primary"
+                                    >
+                                        {/* Show small image only if coverImageSize is 'small' or undefined (not 'hidden') */}
+                                        {post.coverImage && post.coverImageSize !== 'hidden' && (
+                                            <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded">
+                                                <Image
+                                                    src={post.coverImage}
+                                                    alt={post.title}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="flex flex-1 items-baseline justify-between">
+                                            <span className="font-medium">{post.title}</span>
+                                            <span className="ml-4 shrink-0 text-sm text-muted-foreground">
+                                                {format(new Date(post.publishedAt || post.createdAt), 'MMM d, yyyy')}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                )
                             ))}
                         </div>
                         {posts.length > 6 && (

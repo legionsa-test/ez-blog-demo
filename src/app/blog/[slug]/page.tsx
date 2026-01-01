@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Calendar, Clock, User, Menu, X, Eye } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Menu, X, Eye, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -275,6 +275,25 @@ export default function BlogPostPage() {
                                 dangerouslySetInnerHTML={{ __html: contentWithIds }}
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* Bottom Navigation - Right after article content */}
+                <div className="border-t border-border/40">
+                    <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
+                        <Button asChild variant="ghost" size="sm">
+                            <Link href="/">
+                                <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+                                Back
+                            </Link>
+                        </Button>
+                        <button
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            Top
+                            <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                        </button>
                     </div>
                 </div>
 

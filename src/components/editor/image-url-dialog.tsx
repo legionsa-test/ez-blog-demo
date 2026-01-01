@@ -12,15 +12,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
+type ImageSize = 'default' | 'container' | 'full';
+
 interface ImageUrlDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onInsert: (url: string, alt: string) => void;
+    onInsert: (url: string, alt: string, size: ImageSize) => void;
 }
 
 export function ImageUrlDialog({ open, onOpenChange, onInsert }: ImageUrlDialogProps) {
     const [url, setUrl] = useState('');
     const [alt, setAlt] = useState('');
+    const [size, setSize] = useState<ImageSize>('default');
     const [error, setError] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -40,14 +43,16 @@ export function ImageUrlDialog({ open, onOpenChange, onInsert }: ImageUrlDialogP
             return;
         }
 
-        onInsert(url.trim(), alt.trim());
+        onInsert(url.trim(), alt.trim(), size);
         setUrl('');
         setAlt('');
+        setSize('default');
     };
 
     const handleClose = () => {
         setUrl('');
         setAlt('');
+        setSize('default');
         setError('');
         onOpenChange(false);
     };
@@ -73,13 +78,54 @@ export function ImageUrlDialog({ open, onOpenChange, onInsert }: ImageUrlDialogP
                             {error && <p className="text-sm text-destructive">{error}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="image-alt">Alt Text (optional)</Label>
+                            <Label htmlFor="image-alt">Alt Text</Label>
                             <Input
                                 id="image-alt"
                                 value={alt}
                                 onChange={(e) => setAlt(e.target.value)}
                                 placeholder="Describe the image for accessibility"
                             />
+                            <p className="text-xs text-muted-foreground">
+                                Describe the image for screen readers and SEO
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Display Size</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSize('default')}
+                                    className={`rounded-md border px-3 py-2 text-sm transition-colors ${size === 'default'
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border hover:bg-muted'
+                                        }`}
+                                >
+                                    Default
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSize('container')}
+                                    className={`rounded-md border px-3 py-2 text-sm transition-colors ${size === 'container'
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border hover:bg-muted'
+                                        }`}
+                                >
+                                    Container
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSize('full')}
+                                    className={`rounded-md border px-3 py-2 text-sm transition-colors ${size === 'full'
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border hover:bg-muted'
+                                        }`}
+                                >
+                                    Full Width
+                                </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Full width extends beyond the text container
+                            </p>
                         </div>
                         {url && (
                             <div className="space-y-2">
@@ -107,3 +153,4 @@ export function ImageUrlDialog({ open, onOpenChange, onInsert }: ImageUrlDialogP
         </Dialog>
     );
 }
+

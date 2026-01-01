@@ -5,6 +5,7 @@ export interface Post {
   excerpt: string;
   content: string;
   coverImage: string;
+  coverImageSize?: 'small' | 'big' | 'hidden';
   author: Author;
   tags: string[];
   categoryId: string | null;
