@@ -27,6 +27,7 @@ import { exportPosts, importPosts, getPosts, saveAuthor as saveAuthorToStorage }
 import { getSiteSettings, saveSiteSettings } from '@/lib/site-settings';
 import { getPrimaryAuthor, saveAuthor } from '@/lib/authors';
 import { Author, SiteSettings } from '@/lib/types';
+import { THEMES } from '@/lib/themes';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -208,6 +209,46 @@ export default function SettingsPage() {
                         <Save className="mr-2 h-4 w-4" aria-hidden="true" />
                         {isSavingSite ? 'Saving...' : 'Save Site Settings'}
                     </Button>
+                </CardContent>
+            </Card>
+
+            {/* Theme Selection */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Theme</CardTitle>
+                    <CardDescription>
+                        Choose how your homepage looks to visitors.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {THEMES.map((theme) => (
+                            <button
+                                key={theme.id}
+                                onClick={() => {
+                                    setSiteSettings({ ...siteSettings, theme: theme.id });
+                                    const updated = saveSiteSettings({ theme: theme.id });
+                                    toast.success(`Theme changed to "${theme.name}"`);
+                                }}
+                                className={`relative rounded-lg border-2 p-4 text-left transition-all hover:border-primary/50 ${siteSettings.theme === theme.id || (!siteSettings.theme && theme.id === 'ezblog1')
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-border'
+                                    }`}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <h3 className="font-semibold">{theme.name}</h3>
+                                    {(siteSettings.theme === theme.id || (!siteSettings.theme && theme.id === 'ezblog1')) && (
+                                        <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                                            Active
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {theme.description}
+                                </p>
+                            </button>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
 

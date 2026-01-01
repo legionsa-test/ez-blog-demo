@@ -70,6 +70,7 @@ export interface SiteSettings {
   adminPassword: string;
   showFooter?: boolean;
   footerText?: string;
+  theme?: 'ezblog1' | 'atavist';
 }
 
 export interface Page {

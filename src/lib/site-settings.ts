@@ -13,6 +13,7 @@ const defaultSettings: SiteSettings = {
     adminPassword: '',
     showFooter: true,
     footerText: '© {year} ezBlog. Built with Next.js and shadcn/ui.',
+    theme: 'ezblog1',
 };
 
 // Get site settings
