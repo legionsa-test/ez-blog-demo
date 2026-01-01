@@ -14,6 +14,7 @@ const defaultSettings: SiteSettings = {
     showFooter: true,
     footerText: '© {year} ezBlog. Built with Next.js and shadcn/ui.',
     theme: 'ezblog1',
+    welcomeText: 'Welcome to',
 };
 
 // Get site settings

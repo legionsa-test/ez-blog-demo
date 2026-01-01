@@ -28,8 +28,9 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
         return () => window.removeEventListener('site-settings-updated', handleSettingsUpdate);
     }, []);
 
-    // Magazine theme has its own layout, no header/footer
+    // Magazine and Supersimple themes have their own layout
     const isMagazineTheme = theme === 'atavist';
+    const isSupersimpleTheme = theme === 'supersimple';
 
     // Show minimal layout during hydration to prevent flash
     if (!mounted) {
@@ -42,6 +43,18 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
         );
     }
 
+    // Supersimple has its own complete layout
+    if (isSupersimpleTheme) {
+        return (
+            <div className="relative min-h-screen">
+                <main id="main-content" role="main">
+                    {children}
+                </main>
+            </div>
+        );
+    }
+
+    // Magazine theme with sidebar offset footer
     if (isMagazineTheme) {
         return (
             <div className="relative flex min-h-screen flex-col">

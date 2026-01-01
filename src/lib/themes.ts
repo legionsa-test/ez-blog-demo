@@ -1,6 +1,6 @@
 // Theme definitions for the blog
 export interface Theme {
-    id: 'ezblog1' | 'atavist';
+    id: 'ezblog1' | 'atavist' | 'supersimple';
     name: string;
     description: string;
 }
@@ -15,6 +15,11 @@ export const THEMES: Theme[] = [
         id: 'atavist',
         name: 'Magazine',
         description: 'Clean, editorial layout inspired by Atavist Magazine',
+    },
+    {
+        id: 'supersimple',
+        name: 'Supersimple',
+        description: 'Ultra-minimal, text-focused personal blog style',
     },
 ];
 

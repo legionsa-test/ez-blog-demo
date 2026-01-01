@@ -6,6 +6,7 @@ import { getSiteSettings } from '@/lib/site-settings';
 import { Post } from '@/lib/types';
 import { EzBlog1Layout } from '@/components/themes/ezblog1';
 import { AtavistLayout } from '@/components/themes/atavist';
+import { SupersimpleLayout } from '@/components/themes/supersimple';
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -13,7 +14,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [theme, setTheme] = useState<'ezblog1' | 'atavist'>('ezblog1');
+  const [theme, setTheme] = useState<'ezblog1' | 'atavist' | 'supersimple'>('ezblog1');
 
   useEffect(() => {
     initializeSamplePosts();
@@ -52,6 +53,10 @@ export default function HomePage() {
   // Render theme-specific layout
   if (theme === 'atavist') {
     return <AtavistLayout posts={filteredPosts} isLoading={isLoading} />;
+  }
+
+  if (theme === 'supersimple') {
+    return <SupersimpleLayout posts={filteredPosts} isLoading={isLoading} />;
   }
 
   // Default: ezBlog1 layout

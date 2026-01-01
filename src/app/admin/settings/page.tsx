@@ -205,6 +205,18 @@ export default function SettingsPage() {
                             . This enables cover image search.
                         </p>
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="welcomeText">Welcome Text (Supersimple Theme)</Label>
+                        <Input
+                            id="welcomeText"
+                            value={siteSettings.welcomeText || ''}
+                            onChange={(e) => setSiteSettings({ ...siteSettings, welcomeText: e.target.value })}
+                            placeholder="Welcome to"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            The headline text shown on the Supersimple theme homepage.
+                        </p>
+                    </div>
                     <Button onClick={handleSaveSiteSettings} disabled={isSavingSite}>
                         <Save className="mr-2 h-4 w-4" aria-hidden="true" />
                         {isSavingSite ? 'Saving...' : 'Save Site Settings'}
@@ -231,8 +243,8 @@ export default function SettingsPage() {
                                     toast.success(`Theme changed to "${theme.name}"`);
                                 }}
                                 className={`relative rounded-lg border-2 p-4 text-left transition-all hover:border-primary/50 ${siteSettings.theme === theme.id || (!siteSettings.theme && theme.id === 'ezblog1')
-                                        ? 'border-primary bg-primary/5'
-                                        : 'border-border'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
