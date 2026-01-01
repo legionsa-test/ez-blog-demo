@@ -68,6 +68,8 @@ export interface SiteSettings {
   description: string;
   unsplashApiKey: string;
   adminPassword: string;
+  showFooter?: boolean;
+  footerText?: string;
 }
 
 export interface Page {

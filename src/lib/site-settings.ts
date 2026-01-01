@@ -11,6 +11,8 @@ const defaultSettings: SiteSettings = {
     description: 'A modern, headless blog CMS',
     unsplashApiKey: '',
     adminPassword: '',
+    showFooter: true,
+    footerText: '© {year} ezBlog. Built with Next.js and shadcn/ui.',
 };
 
 // Get site settings

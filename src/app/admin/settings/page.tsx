@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
     Card,
     CardContent,
@@ -206,6 +207,44 @@ export default function SettingsPage() {
                     <Button onClick={handleSaveSiteSettings} disabled={isSavingSite}>
                         <Save className="mr-2 h-4 w-4" aria-hidden="true" />
                         {isSavingSite ? 'Saving...' : 'Save Site Settings'}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            {/* Footer Settings */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Footer Settings</CardTitle>
+                    <CardDescription>
+                        Customize your site footer content and visibility.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between space-x-2">
+                        <Label htmlFor="show-footer">Show Footer</Label>
+                        <Switch
+                            id="show-footer"
+                            checked={siteSettings.showFooter !== false}
+                            onCheckedChange={(checked) => setSiteSettings({ ...siteSettings, showFooter: checked })}
+                        />
+                    </div>
+                    {siteSettings.showFooter !== false && (
+                        <div className="space-y-2">
+                            <Label htmlFor="footer-text">Footer Text</Label>
+                            <Input
+                                id="footer-text"
+                                value={siteSettings.footerText || ''}
+                                onChange={(e) => setSiteSettings({ ...siteSettings, footerText: e.target.value })}
+                                placeholder="© {year} ezBlog. Built with Next.js."
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Use {'{year}'} to insert the current year.
+                            </p>
+                        </div>
+                    )}
+                    <Button onClick={handleSaveSiteSettings} disabled={isSavingSite}>
+                        <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+                        {isSavingSite ? 'Saving...' : 'Save Footer Settings'}
                     </Button>
                 </CardContent>
             </Card>

@@ -54,7 +54,7 @@ export function Header() {
 
     // Static navigation items (always shown)
     const staticNavigation = [
-        { name: t('nav.blog'), href: '/' },
+        { name: t('nav.home'), href: '/' },
     ];
 
     // Combine static and dynamic page links
