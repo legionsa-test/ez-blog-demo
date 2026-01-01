@@ -119,6 +119,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -155,4 +156,189 @@
 .focus-visible:focus {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/* Syntax Highlighting (lowlight/highlight.js based) */
+.hljs-comment,
+.hljs-quote {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-name,
+.hljs-tag {
+  color: #c084fc;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-section,
+.hljs-attribute,
+.hljs-literal,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-addition {
+  color: #34d399;
+}
+
+.hljs-deletion,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-meta {
+  color: #f87171;
+}
+
+.hljs-doctag,
+.hljs-attr {
+  color: #60a5fa;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-params,
+.hljs-variable,
+.hljs-class .hljs-title {
+  color: #fbbf24;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* Table styles for editor */
+.ProseMirror table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+  table-layout: auto;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  min-width: 100px;
+}
+
+.ProseMirror th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+.ProseMirror .selectedCell {
+  background: var(--accent);
+}
+
+/* YouTube embed responsive */
+.ProseMirror iframe[src*="youtube"] {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 200ms ease-in-out, transform 200ms ease-in-out;
+}
+
+/* Prose table styles for blog content */
+.prose table {
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+.prose tbody tr:nth-child(even) {
+  background: var(--muted) / 50%;
+}
+
+/* Prose code block styles */
+.prose pre {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+/* Code block language label */
+.prose pre::before {
+  content: attr(data-language);
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* YouTube embeds in prose */
+.prose iframe[src*="youtube"] {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+/* Image hover effect in prose */
+.prose img {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prose img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }

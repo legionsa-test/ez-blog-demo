@@ -90,7 +90,9 @@ export function savePost(post: Partial<Post> & { title: string; content: string 
         coverImage: post.coverImage || '',
         author,
         tags: post.tags || [],
+        categoryId: post.categoryId || null,
         status: post.status || 'draft',
+        scheduledAt: post.scheduledAt || null,
         createdAt: now,
         updatedAt: now,
         publishedAt: post.status === 'published' ? now : null,
@@ -149,10 +151,7 @@ export function importPosts(json: string): boolean {
 export function initializeSamplePosts(): void {
     const posts = getPosts();
     if (posts.length === 0) {
-        const samplePost: Omit<Post, 'id' | 'slug' | 'createdAt' | 'updatedAt' | 'readingTime'> & {
-            title: string;
-            content: string;
-        } = {
+        const samplePost = {
             title: 'Welcome to ezBlog',
             excerpt: 'This is your first blog post. Edit or delete it, then start writing!',
             content: `
@@ -169,10 +168,10 @@ export function initializeSamplePosts(): void {
         <p>Start creating amazing content today!</p>
       `,
             coverImage: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200',
-            author: defaultAuthor,
             tags: ['welcome', 'tutorial'],
-            status: 'published',
-            publishedAt: new Date().toISOString(),
+            categoryId: null,
+            status: 'published' as const,
+            scheduledAt: null,
         };
         savePost(samplePost);
     }

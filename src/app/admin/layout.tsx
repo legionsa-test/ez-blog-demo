@@ -10,6 +10,7 @@ import {
     Settings,
     LogOut,
     Plus,
+    FolderTree,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils';
 const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Posts', href: '/admin/posts', icon: FileText },
+    { name: 'Categories', href: '/admin/categories', icon: FolderTree },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

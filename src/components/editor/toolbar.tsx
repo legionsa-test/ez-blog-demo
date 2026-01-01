@@ -19,6 +19,9 @@ import {
     Image as ImageIcon,
     ImagePlus,
     Unlink,
+    Youtube,
+    Table,
+    Code2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -43,9 +46,19 @@ interface EditorToolbarProps {
     editor: Editor | null;
     onUnsplashClick: () => void;
     onImageUrlClick: () => void;
+    onYouTubeClick?: () => void;
+    onTableClick?: () => void;
+    onCodeBlockClick?: () => void;
 }
 
-export function EditorToolbar({ editor, onUnsplashClick, onImageUrlClick }: EditorToolbarProps) {
+export function EditorToolbar({
+    editor,
+    onUnsplashClick,
+    onImageUrlClick,
+    onYouTubeClick,
+    onTableClick,
+    onCodeBlockClick,
+}: EditorToolbarProps) {
     const [linkDialogOpen, setLinkDialogOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
 
@@ -244,6 +257,35 @@ export function EditorToolbar({ editor, onUnsplashClick, onImageUrlClick }: Edit
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                {/* YouTube */}
+                {onYouTubeClick && (
+                    <ToolbarButton onClick={onYouTubeClick} title="Embed YouTube">
+                        <Youtube className="h-4 w-4" aria-hidden="true" />
+                    </ToolbarButton>
+                )}
+
+                {/* Table */}
+                {onTableClick && (
+                    <ToolbarButton
+                        onClick={onTableClick}
+                        isActive={editor.isActive('table')}
+                        title="Insert Table"
+                    >
+                        <Table className="h-4 w-4" aria-hidden="true" />
+                    </ToolbarButton>
+                )}
+
+                {/* Code Block */}
+                {onCodeBlockClick && (
+                    <ToolbarButton
+                        onClick={onCodeBlockClick}
+                        isActive={editor.isActive('codeBlock')}
+                        title="Code Block"
+                    >
+                        <Code2 className="h-4 w-4" aria-hidden="true" />
+                    </ToolbarButton>
+                )}
             </div>
 
             {/* Link Dialog */}

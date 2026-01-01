@@ -7,7 +7,9 @@ export interface Post {
   coverImage: string;
   author: Author;
   tags: string[];
-  status: 'draft' | 'published';
+  categoryId: string | null;
+  status: 'draft' | 'published' | 'scheduled';
+  scheduledAt: string | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;

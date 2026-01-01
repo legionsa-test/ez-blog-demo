@@ -2,16 +2,24 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, CloudOff, Cloud } from 'lucide-react';
+import { ArrowLeft, Save, CloudOff, Cloud, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { TiptapEditor } from '@/components/editor/tiptap-editor';
 import { savePost } from '@/lib/storage';
+import { getCategories, Category } from '@/lib/categories';
 import { toast } from 'sonner';
 
 const AUTOSAVE_KEY = 'ezblog_autosave_new';
@@ -23,6 +31,8 @@ interface AutosaveData {
     content: string;
     coverImage: string;
     tags: string;
+    categoryId: string;
+    scheduledAt: string;
     isPublished: boolean;
     savedAt: string;
 }
@@ -34,10 +44,18 @@ export default function NewPostPage() {
     const [content, setContent] = useState('');
     const [coverImage, setCoverImage] = useState('');
     const [tags, setTags] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [scheduledAt, setScheduledAt] = useState('');
+    const [categories, setCategories] = useState<Category[]>([]);
     const [isPublished, setIsPublished] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+    // Load categories
+    useEffect(() => {
+        setCategories(getCategories());
+    }, []);
 
     // Load autosaved data on mount
     useEffect(() => {
@@ -50,6 +68,8 @@ export default function NewPostPage() {
                 setContent(data.content || '');
                 setCoverImage(data.coverImage || '');
                 setTags(data.tags || '');
+                setCategoryId(data.categoryId || '');
+                setScheduledAt(data.scheduledAt || '');
                 setIsPublished(data.isPublished || false);
                 setLastSaved(new Date(data.savedAt));
                 toast.info('Restored autosaved draft');
@@ -69,6 +89,8 @@ export default function NewPostPage() {
             content,
             coverImage,
             tags,
+            categoryId,
+            scheduledAt,
             isPublished,
             savedAt: new Date().toISOString(),
         };
@@ -76,7 +98,7 @@ export default function NewPostPage() {
         localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
-    }, [title, excerpt, content, coverImage, tags, isPublished]);
+    }, [title, excerpt, content, coverImage, tags, categoryId, scheduledAt, isPublished]);
 
     // Autosave interval
     useEffect(() => {
@@ -116,20 +138,35 @@ export default function NewPostPage() {
         setIsSaving(true);
 
         try {
+            // Determine status based on scheduling
+            let status: 'draft' | 'published' | 'scheduled' = 'draft';
+            if (scheduledAt && new Date(scheduledAt) > new Date()) {
+                status = 'scheduled';
+            } else if (isPublished) {
+                status = 'published';
+            }
+
             const post = savePost({
                 title: title.trim(),
                 excerpt: excerpt.trim(),
                 content,
                 coverImage: coverImage.trim(),
                 tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-                status: isPublished ? 'published' : 'draft',
+                categoryId: categoryId || null,
+                scheduledAt: scheduledAt || null,
+                status,
             });
 
             // Clear autosave after successful save
             localStorage.removeItem(AUTOSAVE_KEY);
             setHasUnsavedChanges(false);
 
-            toast.success(isPublished ? 'Post published!' : 'Draft saved!');
+            const successMsg = status === 'scheduled'
+                ? 'Post scheduled!'
+                : status === 'published'
+                    ? 'Post published!'
+                    : 'Draft saved!';
+            toast.success(successMsg);
             router.push(`/admin/posts/${post.id}/edit`);
         } catch (error) {
             toast.error('Failed to save post');
@@ -259,6 +296,65 @@ export default function NewPostPage() {
                             <p className="mt-2 text-xs text-muted-foreground">
                                 Separate tags with commas
                             </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Category</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Select
+                                value={categoryId || 'none'}
+                                onValueChange={(val) => setCategoryId(val === 'none' ? '' : val)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select category..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">No Category</SelectItem>
+                                    {categories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.id}>
+                                            {cat.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Schedule</CardTitle>
+                            <CardDescription>
+                                Set a future date to automatically publish
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                <Input
+                                    type="datetime-local"
+                                    value={scheduledAt}
+                                    onChange={(e) => setScheduledAt(e.target.value)}
+                                    min={new Date().toISOString().slice(0, 16)}
+                                />
+                            </div>
+                            {scheduledAt && (
+                                <div className="mt-2 flex items-center justify-between">
+                                    <p className="text-xs text-muted-foreground">
+                                        Will publish on {new Date(scheduledAt).toLocaleString()}
+                                    </p>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setScheduledAt('')}
+                                        className="h-6 px-2 text-xs"
+                                    >
+                                        Clear
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

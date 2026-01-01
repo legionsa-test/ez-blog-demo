@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { TableOfContents } from '@/components/table-of-contents';
 import { ReadingProgress } from '@/components/reading-progress';
 import { ShareButtons } from '@/components/share-buttons';
+import { ImageLightbox, useLightbox } from '@/components/image-lightbox';
 import { getPostBySlug, getPublishedPosts } from '@/lib/storage';
 import { incrementViewCount, getViewCount, updateReadingHistory } from '@/lib/analytics';
 import { generatePostJsonLd, generateBreadcrumbJsonLd } from '@/lib/json-ld';
@@ -42,6 +43,7 @@ export default function BlogPostPage() {
     const [notFound, setNotFound] = useState(false);
     const [showMobileToc, setShowMobileToc] = useState(false);
     const [viewCount, setViewCount] = useState(0);
+    const { lightboxImage, closeLightbox } = useLightbox();
 
     useEffect(() => {
         const foundPost = getPostBySlug(slug);
@@ -318,6 +320,15 @@ export default function BlogPostPage() {
                     </section>
                 )}
             </article>
+
+            {/* Image Lightbox */}
+            {lightboxImage && (
+                <ImageLightbox
+                    src={lightboxImage.src}
+                    alt={lightboxImage.alt}
+                    onClose={closeLightbox}
+                />
+            )}
         </>
     );
 }
