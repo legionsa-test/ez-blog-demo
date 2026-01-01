@@ -2,9 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
-import { SkipLink } from '@/components/layout/skip-link';
+import { LayoutWrapper } from '@/components/layout/layout-wrapper';
 import { Toaster } from '@/components/ui/sonner';
 import { I18nProvider } from '@/lib/i18n';
 
@@ -66,14 +64,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <I18nProvider>
-            <div className="relative flex min-h-screen flex-col">
-              <SkipLink />
-              <Header />
-              <main id="main-content" className="flex-1" role="main">
-                {children}
-              </main>
-              <Footer />
-            </div>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
             <Toaster />
           </I18nProvider>
         </ThemeProvider>
@@ -81,3 +74,4 @@ export default function RootLayout({
     </html>
   );
 }
+
