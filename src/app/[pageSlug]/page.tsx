@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronUp } from 'lucide-react';
+import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPageBySlug, getPublishedPages } from '@/lib/pages';
@@ -70,17 +71,18 @@ export default function PageSlugPage() {
     }
 
     return (
-        <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-            {/* Page Header */}
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-                    {page.title}
-                </h1>
-            </header>
+        <>
+            <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+                {/* Page Header */}
+                <header className="mb-8">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                        {page.title}
+                    </h1>
+                </header>
 
-            {/* Page Content */}
-            <div
-                className="prose prose-lg max-w-none dark:prose-invert 
+                {/* Page Content */}
+                <div
+                    className="prose prose-lg max-w-none dark:prose-invert 
                 prose-headings:font-bold prose-headings:tracking-tight
                 prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-6
                 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4
@@ -91,8 +93,29 @@ export default function PageSlugPage() {
                 prose-blockquote:border-l-primary prose-blockquote:bg-muted/50 prose-blockquote:py-1 prose-blockquote:rounded-r-lg
                 prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
                 prose-pre:bg-muted prose-pre:border prose-pre:border-border"
-                dangerouslySetInnerHTML={{ __html: page.content }}
-            />
-        </article>
+                    dangerouslySetInnerHTML={{ __html: page.content }}
+                />
+
+                {/* Bottom Navigation - Aligned with content */}
+                <div className="mt-8 border-b border-border/40 pb-6">
+                    <div className="flex items-center justify-between">
+                        <Button asChild variant="ghost" size="sm" className="-ml-3 h-8">
+                            <Link href="/">
+                                <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+                                Back to Home
+                            </Link>
+                        </Button>
+                        <button
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            Top
+                            <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                    </div>
+                </div>
+            </article>
+            <Footer />
+        </>
     );
 }

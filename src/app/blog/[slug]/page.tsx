@@ -275,28 +275,30 @@ export default function BlogPostPage() {
                 prose-pre:bg-muted prose-pre:border prose-pre:border-border"
                                 dangerouslySetInnerHTML={{ __html: contentWithIds }}
                             />
+
+                            {/* Bottom Navigation - Aligned with content */}
+                            <div className="mt-8 border-b border-border/40 pb-6">
+                                <div className="flex items-center justify-between">
+                                    <Button asChild variant="ghost" size="sm" className="-ml-3 h-8">
+                                        <Link href="/">
+                                            <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+                                            Back
+                                        </Link>
+                                    </Button>
+                                    <button
+                                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                        className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        Top
+                                        <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Navigation - Right after article content */}
-                <div className="border-b border-border/40">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
-                        <Button asChild variant="ghost" size="sm">
-                            <Link href="/">
-                                <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-                                Back
-                            </Link>
-                        </Button>
-                        <button
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                            className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            Top
-                            <ChevronUp className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                    </div>
-                </div>
+
 
                 {/* Related Posts */}
                 {relatedPosts.length > 0 && (
