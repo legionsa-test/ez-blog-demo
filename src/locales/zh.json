@@ -1,0 +1,93 @@
+{
+    "common": {
+        "search": "搜索",
+        "all": "全部",
+        "loading": "加载中...",
+        "save": "保存",
+        "cancel": "取消",
+        "delete": "删除",
+        "edit": "编辑",
+        "create": "创建",
+        "back": "返回",
+        "view": "查看",
+        "published": "已发布",
+        "draft": "草稿",
+        "scheduled": "已计划",
+        "minRead": "{min} 分钟阅读",
+        "noResults": "未找到结果"
+    },
+    "nav": {
+        "blog": "博客",
+        "home": "首页",
+        "about": "关于"
+    },
+    "home": {
+        "title": "ezBlog",
+        "subtitle": "关于网页开发、设计和技术的见解、教程和故事。",
+        "searchPlaceholder": "搜索文章...",
+        "noArticles": "暂无文章，请稍后再来！",
+        "noMatch": "未找到符合条件的文章。",
+        "readArticle": "阅读文章",
+        "featuredPost": "精选"
+    },
+    "post": {
+        "readingTime": "{min} 分钟阅读",
+        "publishedOn": "发布于 {date}",
+        "writtenBy": "作者",
+        "tableOfContents": "目录",
+        "sharePost": "分享这篇文章",
+        "copyLink": "复制链接",
+        "linkCopied": "链接已复制！"
+    },
+    "admin": {
+        "dashboard": "仪表板",
+        "posts": "文章",
+        "pages": "页面",
+        "authors": "作者",
+        "categories": "分类",
+        "settings": "设置",
+        "newPost": "新文章",
+        "newPage": "新页面",
+        "newAuthor": "新作者",
+        "editPost": "编辑文章",
+        "editPage": "编辑页面",
+        "editAuthor": "编辑作者",
+        "allPosts": "所有文章",
+        "allPages": "所有页面",
+        "allAuthors": "所有作者",
+        "totalPosts": "共 {count} 篇文章",
+        "totalPages": "共 {count} 个页面",
+        "deleteConfirm": "确定要删除吗？此操作无法撤销。",
+        "logout": "退出"
+    },
+    "settings": {
+        "title": "设置",
+        "description": "管理您的博客设置和数据。",
+        "siteSettings": "网站设置",
+        "siteDescription": "自定义博客的外观和品牌。",
+        "siteTitle": "网站标题",
+        "siteIcon": "网站图标",
+        "security": "安全",
+        "newPassword": "新密码",
+        "confirmPassword": "确认密码",
+        "updatePassword": "更新密码",
+        "unsplashApiKey": "Unsplash API 密钥",
+        "authorProfile": "作者资料",
+        "authorName": "姓名",
+        "authorAvatar": "头像链接",
+        "authorBio": "简介",
+        "dataManagement": "数据管理",
+        "exportPosts": "导出文章",
+        "importPosts": "导入文章",
+        "clearData": "清除所有数据"
+    },
+    "footer": {
+        "copyright": "© {year} 版权所有。",
+        "poweredBy": "由 ezBlog 提供支持"
+    },
+    "errors": {
+        "notFound": "页面未找到",
+        "notFoundDesc": "您要查找的页面不存在。",
+        "backHome": "返回首页"
+    }
+}

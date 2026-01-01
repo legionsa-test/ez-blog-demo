@@ -17,9 +17,17 @@ export interface Post {
 }
 
 export interface Author {
+  id: string;
   name: string;
   avatar: string;
   bio: string;
+  email?: string;
+  socialLinks?: {
+    twitter?: string;
+    github?: string;
+    linkedin?: string;
+    website?: string;
+  };
 }
 
 export interface UnsplashPhoto {
@@ -52,4 +60,22 @@ export interface UnsplashSearchResult {
   total: number;
   total_pages: number;
   results: UnsplashPhoto[];
+}
+
+export interface SiteSettings {
+  title: string;
+  icon: string; // Emoji
+  description: string;
+  unsplashApiKey: string;
+  adminPassword: string;
+}
+
+export interface Page {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -1,0 +1,93 @@
+{
+    "common": {
+        "search": "Cari",
+        "all": "Semua",
+        "loading": "Memuat...",
+        "save": "Simpan",
+        "cancel": "Batal",
+        "delete": "Hapus",
+        "edit": "Edit",
+        "create": "Buat",
+        "back": "Kembali",
+        "view": "Lihat",
+        "published": "Diterbitkan",
+        "draft": "Draf",
+        "scheduled": "Terjadwal",
+        "minRead": "{min} menit baca",
+        "noResults": "Tidak ada hasil"
+    },
+    "nav": {
+        "blog": "Blog",
+        "home": "Beranda",
+        "about": "Tentang"
+    },
+    "home": {
+        "title": "ezBlog",
+        "subtitle": "Wawasan, tutorial, dan cerita tentang pengembangan web, desain, dan teknologi.",
+        "searchPlaceholder": "Cari artikel...",
+        "noArticles": "Belum ada artikel. Cek lagi nanti!",
+        "noMatch": "Tidak ada artikel yang sesuai dengan kriteria Anda.",
+        "readArticle": "Baca artikel",
+        "featuredPost": "Unggulan"
+    },
+    "post": {
+        "readingTime": "{min} menit baca",
+        "publishedOn": "Diterbitkan pada {date}",
+        "writtenBy": "Ditulis oleh",
+        "tableOfContents": "Daftar Isi",
+        "sharePost": "Bagikan artikel ini",
+        "copyLink": "Salin tautan",
+        "linkCopied": "Tautan disalin!"
+    },
+    "admin": {
+        "dashboard": "Dasbor",
+        "posts": "Artikel",
+        "pages": "Halaman",
+        "authors": "Penulis",
+        "categories": "Kategori",
+        "settings": "Pengaturan",
+        "newPost": "Artikel Baru",
+        "newPage": "Halaman Baru",
+        "newAuthor": "Penulis Baru",
+        "editPost": "Edit Artikel",
+        "editPage": "Edit Halaman",
+        "editAuthor": "Edit Penulis",
+        "allPosts": "Semua Artikel",
+        "allPages": "Semua Halaman",
+        "allAuthors": "Semua Penulis",
+        "totalPosts": "Total {count} artikel",
+        "totalPages": "Total {count} halaman",
+        "deleteConfirm": "Apakah Anda yakin ingin menghapus ini? Tindakan ini tidak dapat dibatalkan.",
+        "logout": "Keluar"
+    },
+    "settings": {
+        "title": "Pengaturan",
+        "description": "Kelola pengaturan dan data blog Anda.",
+        "siteSettings": "Pengaturan Situs",
+        "siteDescription": "Sesuaikan tampilan dan branding blog Anda.",
+        "siteTitle": "Judul Situs",
+        "siteIcon": "Ikon Situs",
+        "security": "Keamanan",
+        "newPassword": "Password Baru",
+        "confirmPassword": "Konfirmasi Password",
+        "updatePassword": "Perbarui Password",
+        "unsplashApiKey": "Kunci API Unsplash",
+        "authorProfile": "Profil Penulis",
+        "authorName": "Nama",
+        "authorAvatar": "URL Avatar",
+        "authorBio": "Bio",
+        "dataManagement": "Manajemen Data",
+        "exportPosts": "Ekspor Artikel",
+        "importPosts": "Impor Artikel",
+        "clearData": "Hapus Semua Data"
+    },
+    "footer": {
+        "copyright": "© {year} Hak cipta dilindungi.",
+        "poweredBy": "Dikelola oleh ezBlog"
+    },
+    "errors": {
+        "notFound": "Halaman Tidak Ditemukan",
+        "notFoundDesc": "Halaman yang Anda cari tidak ada.",
+        "backHome": "Kembali ke Beranda"
+    }
+}

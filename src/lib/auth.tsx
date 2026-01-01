@@ -2,13 +2,10 @@
 
 import Cookies from 'js-cookie';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { getAdminPassword } from './site-settings';
 
 const AUTH_COOKIE = 'ezblog_auth';
 const AUTH_EXPIRY_DAYS = 7;
-
-// Simple password-based authentication
-// In production, use the ADMIN_PASSWORD environment variable
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -31,7 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const login = (password: string): boolean => {
-        if (password === ADMIN_PASSWORD) {
+        const adminPassword = getAdminPassword();
+        if (password === adminPassword) {
             Cookies.set(AUTH_COOKIE, 'true', { expires: AUTH_EXPIRY_DAYS });
             setIsAuthenticated(true);
             return true;

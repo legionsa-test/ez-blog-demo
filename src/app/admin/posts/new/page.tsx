@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, CloudOff, Cloud, Calendar } from 'lucide-react';
+import { ArrowLeft, Save, CloudOff, Cloud, Calendar, ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { TiptapEditor } from '@/components/editor/tiptap-editor';
+import { UnsplashPicker } from '@/components/editor/unsplash-picker';
+import { isUnsplashConfigured } from '@/lib/unsplash';
 import { savePost } from '@/lib/storage';
 import { getCategories, Category } from '@/lib/categories';
+import { getAuthors, getPrimaryAuthor } from '@/lib/authors';
+import { Author } from '@/lib/types';
 import { toast } from 'sonner';
 
 const AUTOSAVE_KEY = 'ezblog_autosave_new';
@@ -47,14 +51,23 @@ export default function NewPostPage() {
     const [categoryId, setCategoryId] = useState('');
     const [scheduledAt, setScheduledAt] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
+    const [authors, setAuthors] = useState<Author[]>([]);
+    const [authorId, setAuthorId] = useState('');
     const [isPublished, setIsPublished] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [unsplashOpen, setUnsplashOpen] = useState(false);
 
-    // Load categories
+    // Load categories and authors
     useEffect(() => {
         setCategories(getCategories());
+        const loadedAuthors = getAuthors();
+        setAuthors(loadedAuthors);
+        // Default to primary author
+        if (loadedAuthors.length > 0) {
+            setAuthorId(loadedAuthors[0].id);
+        }
     }, []);
 
     // Load autosaved data on mount
@@ -271,6 +284,16 @@ export default function NewPostPage() {
                                 onChange={(e) => setCoverImage(e.target.value)}
                                 placeholder="https://example.com/image.jpg"
                             />
+                            {isUnsplashConfigured() && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => setUnsplashOpen(true)}
+                                >
+                                    <ImageIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+                                    Search Unsplash
+                                </Button>
+                            )}
                             {coverImage && (
                                 <div className="relative aspect-video overflow-hidden rounded-lg border border-border">
                                     <img
@@ -325,6 +348,29 @@ export default function NewPostPage() {
 
                     <Card>
                         <CardHeader>
+                            <CardTitle className="text-base">Author</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Select
+                                value={authorId || 'default'}
+                                onValueChange={(val) => setAuthorId(val)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select author..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {authors.map((author) => (
+                                        <SelectItem key={author.id} value={author.id}>
+                                            {author.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
                             <CardTitle className="text-base">Schedule</CardTitle>
                             <CardDescription>
                                 Set a future date to automatically publish
@@ -359,6 +405,16 @@ export default function NewPostPage() {
                     </Card>
                 </div>
             </div>
+
+            {/* Unsplash Picker */}
+            <UnsplashPicker
+                open={unsplashOpen}
+                onOpenChange={setUnsplashOpen}
+                onSelect={(photo) => {
+                    setCoverImage(photo.urls.regular);
+                    setUnsplashOpen(false);
+                }}
+            />
         </div>
     );
 }

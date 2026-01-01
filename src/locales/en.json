@@ -1,0 +1,93 @@
+{
+    "common": {
+        "search": "Search",
+        "all": "All",
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "create": "Create",
+        "back": "Back",
+        "view": "View",
+        "published": "Published",
+        "draft": "Draft",
+        "scheduled": "Scheduled",
+        "minRead": "{min} min read",
+        "noResults": "No results found"
+    },
+    "nav": {
+        "blog": "Blog",
+        "home": "Home",
+        "about": "About"
+    },
+    "home": {
+        "title": "The ezBlog",
+        "subtitle": "Insights, tutorials, and stories about web development, design, and technology.",
+        "searchPlaceholder": "Search articles...",
+        "noArticles": "No articles yet. Check back soon!",
+        "noMatch": "No articles found matching your criteria.",
+        "readArticle": "Read article",
+        "featuredPost": "Featured"
+    },
+    "post": {
+        "readingTime": "{min} min read",
+        "publishedOn": "Published on {date}",
+        "writtenBy": "Written by",
+        "tableOfContents": "Table of Contents",
+        "sharePost": "Share this post",
+        "copyLink": "Copy link",
+        "linkCopied": "Link copied!"
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "posts": "Posts",
+        "pages": "Pages",
+        "authors": "Authors",
+        "categories": "Categories",
+        "settings": "Settings",
+        "newPost": "New Post",
+        "newPage": "New Page",
+        "newAuthor": "New Author",
+        "editPost": "Edit Post",
+        "editPage": "Edit Page",
+        "editAuthor": "Edit Author",
+        "allPosts": "All Posts",
+        "allPages": "All Pages",
+        "allAuthors": "All Authors",
+        "totalPosts": "{count} posts total",
+        "totalPages": "{count} pages total",
+        "deleteConfirm": "Are you sure you want to delete this? This action cannot be undone.",
+        "logout": "Logout"
+    },
+    "settings": {
+        "title": "Settings",
+        "description": "Manage your blog settings and data.",
+        "siteSettings": "Site Settings",
+        "siteDescription": "Customize your blog's appearance and branding.",
+        "siteTitle": "Site Title",
+        "siteIcon": "Site Icon",
+        "security": "Security",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm Password",
+        "updatePassword": "Update Password",
+        "unsplashApiKey": "Unsplash API Key",
+        "authorProfile": "Author Profile",
+        "authorName": "Name",
+        "authorAvatar": "Avatar URL",
+        "authorBio": "Bio",
+        "dataManagement": "Data Management",
+        "exportPosts": "Export Posts",
+        "importPosts": "Import Posts",
+        "clearData": "Clear All Data"
+    },
+    "footer": {
+        "copyright": "© {year} All rights reserved.",
+        "poweredBy": "Powered by ezBlog"
+    },
+    "errors": {
+        "notFound": "Page Not Found",
+        "notFoundDesc": "The page you're looking for doesn't exist.",
+        "backHome": "Back to Home"
+    }
+}

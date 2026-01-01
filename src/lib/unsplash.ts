@@ -1,14 +1,25 @@
 import { UnsplashPhoto, UnsplashSearchResult } from './types';
+import { getUnsplashApiKey } from './site-settings';
 
-const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || '';
 const UNSPLASH_API_URL = 'https://api.unsplash.com';
+
+// Get the API key (from site settings or env variable)
+function getApiKey(): string {
+    // Try site settings first, then fall back to env variable
+    if (typeof window !== 'undefined') {
+        const settingsKey = getUnsplashApiKey();
+        if (settingsKey) return settingsKey;
+    }
+    return process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || '';
+}
 
 export async function searchPhotos(
     query: string,
     page: number = 1,
     perPage: number = 12
 ): Promise<UnsplashSearchResult> {
-    if (!UNSPLASH_ACCESS_KEY) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
         console.warn('Unsplash API key not configured');
         return { total: 0, total_pages: 0, results: [] };
     }
@@ -22,7 +33,7 @@ export async function searchPhotos(
 
     const response = await fetch(`${UNSPLASH_API_URL}/search/photos?${params}`, {
         headers: {
-            Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+            Authorization: `Client-ID ${apiKey}`,
         },
     });
 
@@ -34,13 +45,14 @@ export async function searchPhotos(
 }
 
 export async function getPhoto(id: string): Promise<UnsplashPhoto> {
-    if (!UNSPLASH_ACCESS_KEY) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
         throw new Error('Unsplash API key not configured');
     }
 
     const response = await fetch(`${UNSPLASH_API_URL}/photos/${id}`, {
         headers: {
-            Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+            Authorization: `Client-ID ${apiKey}`,
         },
     });
 
@@ -53,10 +65,11 @@ export async function getPhoto(id: string): Promise<UnsplashPhoto> {
 
 // Track download as per Unsplash guidelines
 export async function trackDownload(downloadLocation: string): Promise<void> {
-    if (!UNSPLASH_ACCESS_KEY) return;
+    const apiKey = getApiKey();
+    if (!apiKey) return;
 
     try {
-        await fetch(`${downloadLocation}?client_id=${UNSPLASH_ACCESS_KEY}`);
+        await fetch(`${downloadLocation}?client_id=${apiKey}`);
     } catch (error) {
         console.error('Failed to track Unsplash download:', error);
     }
@@ -69,5 +82,5 @@ export function getAttribution(photo: UnsplashPhoto): string {
 
 // Check if Unsplash is configured
 export function isUnsplashConfigured(): boolean {
-    return Boolean(UNSPLASH_ACCESS_KEY);
+    return Boolean(getApiKey());
 }

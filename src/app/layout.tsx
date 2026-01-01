@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { SkipLink } from '@/components/layout/skip-link';
 import { Toaster } from '@/components/ui/sonner';
+import { I18nProvider } from '@/lib/i18n';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -64,15 +65,17 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col">
-            <SkipLink />
-            <Header />
-            <main id="main-content" className="flex-1" role="main">
-              {children}
-            </main>
-            <Footer />
-          </div>
-          <Toaster />
+          <I18nProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <SkipLink />
+              <Header />
+              <main id="main-content" className="flex-1" role="main">
+                {children}
+              </main>
+              <Footer />
+            </div>
+            <Toaster />
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

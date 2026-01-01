@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Save, Download, Upload, Trash2 } from 'lucide-react';
+import { Save, Download, Upload, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,30 +21,63 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { EmojiPicker } from '@/components/emoji-picker';
 import { getAuthor, saveAuthor, exportPosts, importPosts, getPosts } from '@/lib/storage';
-import { Author } from '@/lib/types';
+import { getSiteSettings, saveSiteSettings } from '@/lib/site-settings';
+import { Author, SiteSettings } from '@/lib/types';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
     const [author, setAuthor] = useState<Author>({ name: '', avatar: '', bio: '' });
+    const [siteSettings, setSiteSettings] = useState<SiteSettings>({
+        title: 'ezBlog',
+        icon: '✍️',
+        description: '',
+        unsplashApiKey: '',
+        adminPassword: '',
+    });
     const [isSaving, setIsSaving] = useState(false);
+    const [isSavingSite, setIsSavingSite] = useState(false);
+    const [isSavingPassword, setIsSavingPassword] = useState(false);
     const [clearDialogOpen, setClearDialogOpen] = useState(false);
+    const [showApiKey, setShowApiKey] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
     useEffect(() => {
         const currentAuthor = getAuthor();
         setAuthor(currentAuthor);
+
+        const currentSettings = getSiteSettings();
+        setSiteSettings(currentSettings);
     }, []);
 
     const handleSaveAuthor = () => {
         setIsSaving(true);
         try {
             saveAuthor(author);
-            toast.success('Settings saved!');
+            toast.success('Author profile saved!');
         } catch (error) {
-            toast.error('Failed to save settings');
+            toast.error('Failed to save author profile');
             console.error(error);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleSaveSiteSettings = () => {
+        setIsSavingSite(true);
+        try {
+            saveSiteSettings(siteSettings);
+            toast.success('Site settings saved!');
+            // Trigger a page reload to update header
+            window.dispatchEvent(new Event('site-settings-updated'));
+        } catch (error) {
+            toast.error('Failed to save site settings');
+            console.error(error);
+        } finally {
+            setIsSavingSite(false);
         }
     };
 
@@ -71,7 +104,6 @@ export default function SettingsPage() {
             const content = event.target?.result as string;
             if (importPosts(content)) {
                 toast.success('Posts imported successfully!');
-                // Reset the input
                 e.target.value = '';
             } else {
                 toast.error('Failed to import posts. Invalid file format.');
@@ -84,7 +116,6 @@ export default function SettingsPage() {
         localStorage.clear();
         toast.success('All data cleared!');
         setClearDialogOpen(false);
-        // Reload the page to reset state
         window.location.reload();
     };
 
@@ -97,6 +128,171 @@ export default function SettingsPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
                 <p className="text-muted-foreground">Manage your blog settings and data.</p>
             </div>
+
+            {/* Site Settings */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Site Settings</CardTitle>
+                    <CardDescription>
+                        Customize your blog&apos;s appearance and branding.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-start gap-6">
+                        <div className="space-y-2">
+                            <Label>Site Icon</Label>
+                            <EmojiPicker
+                                value={siteSettings.icon}
+                                onChange={(icon) => setSiteSettings({ ...siteSettings, icon })}
+                            />
+                        </div>
+                        <div className="flex-1 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="site-title">Site Title</Label>
+                                <Input
+                                    id="site-title"
+                                    value={siteSettings.title}
+                                    onChange={(e) => setSiteSettings({ ...siteSettings, title: e.target.value })}
+                                    placeholder="My Blog"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="site-description">Site Description</Label>
+                                <Textarea
+                                    id="site-description"
+                                    value={siteSettings.description}
+                                    onChange={(e) => setSiteSettings({ ...siteSettings, description: e.target.value })}
+                                    placeholder="A brief description of your blog"
+                                    rows={2}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="unsplash-key">Unsplash API Key</Label>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Input
+                                    id="unsplash-key"
+                                    type={showApiKey ? 'text' : 'password'}
+                                    value={siteSettings.unsplashApiKey}
+                                    onChange={(e) => setSiteSettings({ ...siteSettings, unsplashApiKey: e.target.value })}
+                                    placeholder="Enter your Unsplash API key"
+                                />
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setShowApiKey(!showApiKey)}
+                                aria-label={showApiKey ? 'Hide API key' : 'Show API key'}
+                            >
+                                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Get your API key from{' '}
+                            <a
+                                href="https://unsplash.com/developers"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary underline"
+                            >
+                                unsplash.com/developers
+                            </a>
+                            . This enables cover image search.
+                        </p>
+                    </div>
+                    <Button onClick={handleSaveSiteSettings} disabled={isSavingSite}>
+                        <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+                        {isSavingSite ? 'Saving...' : 'Save Site Settings'}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            {/* Security Settings */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Security</CardTitle>
+                    <CardDescription>
+                        Change your admin password. Leave blank to keep the current password.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="new-password">New Password</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                id="new-password"
+                                type={showNewPassword ? 'text' : 'password'}
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="Enter new password"
+                            />
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <Input
+                            id="confirm-password"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
+                        />
+                    </div>
+                    {siteSettings.adminPassword && (
+                        <p className="text-xs text-muted-foreground">
+                            A custom password is currently set.
+                        </p>
+                    )}
+                    {!siteSettings.adminPassword && (
+                        <p className="text-xs text-muted-foreground">
+                            Using default password. Set a custom password for better security.
+                        </p>
+                    )}
+                    <Button
+                        onClick={() => {
+                            if (!newPassword) {
+                                toast.error('Please enter a new password');
+                                return;
+                            }
+                            if (newPassword !== confirmPassword) {
+                                toast.error('Passwords do not match');
+                                return;
+                            }
+                            if (newPassword.length < 6) {
+                                toast.error('Password must be at least 6 characters');
+                                return;
+                            }
+                            setIsSavingPassword(true);
+                            try {
+                                saveSiteSettings({ adminPassword: newPassword });
+                                setSiteSettings({ ...siteSettings, adminPassword: newPassword });
+                                setNewPassword('');
+                                setConfirmPassword('');
+                                toast.success('Password updated! You may need to log in again.');
+                            } catch (error) {
+                                toast.error('Failed to update password');
+                                console.error(error);
+                            } finally {
+                                setIsSavingPassword(false);
+                            }
+                        }}
+                        disabled={isSavingPassword || !newPassword}
+                    >
+                        <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+                        {isSavingPassword ? 'Updating...' : 'Update Password'}
+                    </Button>
+                </CardContent>
+            </Card>
 
             {/* Author Settings */}
             <Card>
@@ -137,7 +333,7 @@ export default function SettingsPage() {
                     </div>
                     <Button onClick={handleSaveAuthor} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-                        {isSaving ? 'Saving...' : 'Save Changes'}
+                        {isSaving ? 'Saving...' : 'Save Author Profile'}
                     </Button>
                 </CardContent>
             </Card>
@@ -179,45 +375,13 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-            {/* Environment Variables Info */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Environment Variables</CardTitle>
-                    <CardDescription>
-                        Configure these environment variables for full functionality.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        <div className="rounded-lg bg-muted p-4">
-                            <h4 className="font-mono text-sm font-semibold">NEXT_PUBLIC_ADMIN_PASSWORD</h4>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Set the admin login password. Default: admin123
-                            </p>
-                        </div>
-                        <div className="rounded-lg bg-muted p-4">
-                            <h4 className="font-mono text-sm font-semibold">NEXT_PUBLIC_UNSPLASH_ACCESS_KEY</h4>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Your Unsplash API access key for image search.
-                            </p>
-                        </div>
-                        <div className="rounded-lg bg-muted p-4">
-                            <h4 className="font-mono text-sm font-semibold">NEXT_PUBLIC_SITE_URL</h4>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Your site&apos;s public URL for sitemap generation.
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
             {/* Clear Data Dialog */}
             <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Clear All Data</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to clear all data? This will delete all posts and settings.
+                            Are you sure you want to clear all data? This will delete all posts, pages, and settings.
                             This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>

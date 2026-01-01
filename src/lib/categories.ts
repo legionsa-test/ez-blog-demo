@@ -100,6 +100,71 @@ export function deleteCategory(id: string): void {
     localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
 }
 
+// Create a new category
+export function createCategory(data: {
+    name: string;
+    slug?: string;
+    parentId?: string | null;
+    description?: string;
+    color?: string;
+}): Category {
+    const categories = getCategories();
+    const newCategory: Category = {
+        id: generateId(),
+        name: data.name,
+        slug: data.slug || generateSlug(data.name),
+        description: data.description || '',
+        parentId: data.parentId || null,
+        color: data.color || '#6366f1',
+        createdAt: new Date().toISOString(),
+    };
+
+    categories.push(newCategory);
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+    return newCategory;
+}
+
+// Update an existing category
+export function updateCategory(id: string, data: Partial<Omit<Category, 'id' | 'createdAt'>>): Category | null {
+    const categories = getCategories();
+    const index = categories.findIndex((c) => c.id === id);
+
+    if (index === -1) return null;
+
+    categories[index] = {
+        ...categories[index],
+        ...data,
+    };
+
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+    return categories[index];
+}
+
+// Get category tree (hierarchical structure)
+export function getCategoryTree(): (Category & { children: Category[] })[] {
+    const categories = getCategories();
+    const categoryMap = new Map<string, Category & { children: Category[] }>();
+
+    // Initialize all categories with empty children array
+    categories.forEach((cat) => {
+        categoryMap.set(cat.id, { ...cat, children: [] });
+    });
+
+    const rootCategories: (Category & { children: Category[] })[] = [];
+
+    // Build tree structure
+    categories.forEach((cat) => {
+        const node = categoryMap.get(cat.id)!;
+        if (cat.parentId && categoryMap.has(cat.parentId)) {
+            categoryMap.get(cat.parentId)!.children.push(node);
+        } else {
+            rootCategories.push(node);
+        }
+    });
+
+    return rootCategories;
+}
+
 // Initialize default categories
 export function initializeDefaultCategories(): void {
     if (typeof window === 'undefined') return;
@@ -113,5 +178,5 @@ export function initializeDefaultCategories(): void {
         { name: 'News', color: '#f59e0b' },
     ];
 
-    defaults.forEach((cat) => saveCategory(cat));
+    defaults.forEach((cat) => createCategory(cat));
 }
