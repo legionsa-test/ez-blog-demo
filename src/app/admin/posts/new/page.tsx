@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, CloudOff, Cloud } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { TiptapEditor } from '@/components/editor/tiptap-editor';
 import { savePost } from '@/lib/storage';
 import { toast } from 'sonner';
+
+const AUTOSAVE_KEY = 'ezblog_autosave_new';
+const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+
+interface AutosaveData {
+    title: string;
+    excerpt: string;
+    content: string;
+    coverImage: string;
+    tags: string;
+    isPublished: boolean;
+    savedAt: string;
+}
 
 export default function NewPostPage() {
     const router = useRouter();
@@ -24,6 +36,76 @@ export default function NewPostPage() {
     const [tags, setTags] = useState('');
     const [isPublished, setIsPublished] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+    // Load autosaved data on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(AUTOSAVE_KEY);
+        if (saved) {
+            try {
+                const data: AutosaveData = JSON.parse(saved);
+                setTitle(data.title || '');
+                setExcerpt(data.excerpt || '');
+                setContent(data.content || '');
+                setCoverImage(data.coverImage || '');
+                setTags(data.tags || '');
+                setIsPublished(data.isPublished || false);
+                setLastSaved(new Date(data.savedAt));
+                toast.info('Restored autosaved draft');
+            } catch (e) {
+                console.error('Failed to restore autosave:', e);
+            }
+        }
+    }, []);
+
+    // Autosave function
+    const autoSave = useCallback(() => {
+        if (!title.trim() && !content.trim()) return;
+
+        const data: AutosaveData = {
+            title,
+            excerpt,
+            content,
+            coverImage,
+            tags,
+            isPublished,
+            savedAt: new Date().toISOString(),
+        };
+
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+        setLastSaved(new Date());
+        setHasUnsavedChanges(false);
+    }, [title, excerpt, content, coverImage, tags, isPublished]);
+
+    // Autosave interval
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (hasUnsavedChanges) {
+                autoSave();
+            }
+        }, AUTOSAVE_INTERVAL);
+
+        return () => clearInterval(interval);
+    }, [hasUnsavedChanges, autoSave]);
+
+    // Track unsaved changes
+    useEffect(() => {
+        setHasUnsavedChanges(true);
+    }, [title, excerpt, content, coverImage, tags, isPublished]);
+
+    // Warn before leaving with unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges && (title.trim() || content.trim())) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges, title, content]);
 
     const handleSave = async () => {
         if (!title.trim()) {
@@ -42,6 +124,10 @@ export default function NewPostPage() {
                 tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
                 status: isPublished ? 'published' : 'draft',
             });
+
+            // Clear autosave after successful save
+            localStorage.removeItem(AUTOSAVE_KEY);
+            setHasUnsavedChanges(false);
 
             toast.success(isPublished ? 'Post published!' : 'Draft saved!');
             router.push(`/admin/posts/${post.id}/edit`);
@@ -66,7 +152,21 @@ export default function NewPostPage() {
                     </Button>
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">New Post</h1>
-                        <p className="text-muted-foreground">Create a new blog post.</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            {hasUnsavedChanges ? (
+                                <>
+                                    <CloudOff className="h-3 w-3" aria-hidden="true" />
+                                    <span>Unsaved changes</span>
+                                </>
+                            ) : lastSaved ? (
+                                <>
+                                    <Cloud className="h-3 w-3" aria-hidden="true" />
+                                    <span>Saved {lastSaved.toLocaleTimeString()}</span>
+                                </>
+                            ) : (
+                                <span>Create a new blog post.</span>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -80,6 +180,10 @@ export default function NewPostPage() {
                             onCheckedChange={setIsPublished}
                         />
                     </div>
+                    <Button variant="outline" onClick={autoSave} disabled={!hasUnsavedChanges}>
+                        <Cloud className="mr-2 h-4 w-4" aria-hidden="true" />
+                        Save Draft
+                    </Button>
                     <Button onClick={handleSave} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" aria-hidden="true" />
                         {isSaving ? 'Saving...' : 'Save'}

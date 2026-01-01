@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Blog', href: '/blog' },
+    { name: 'Blog', href: '/' },
 ];
 
 export function Header() {
