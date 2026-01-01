@@ -2,11 +2,13 @@
 
 import { Post, Author } from './types';
 
-const STORAGE_KEY = 'ezblog_posts';
-const AUTHOR_KEY = 'ezblog_author';
+import { getPrimaryAuthor, saveAuthor as saveAuthorToStorage } from './authors';
 
-// Default author
+const STORAGE_KEY = 'ezblog_posts';
+
+// Default author (deprecated, use authors.ts)
 const defaultAuthor: Author = {
+    id: 'default',
     name: 'Admin',
     avatar: '/avatar.svg',
     bio: 'Blog administrator',
@@ -59,7 +61,8 @@ export function getPostById(id: string): Post | null {
 // Save a post (create or update)
 export function savePost(post: Partial<Post> & { title: string; content: string }): Post {
     const posts = getPosts();
-    const author = getAuthor();
+    // Use the primary author for new posts if not specified
+    const author = post.author || getPrimaryAuthor();
     const now = new Date().toISOString();
 
     if (post.id) {
@@ -115,16 +118,14 @@ export function deletePost(id: string): boolean {
     return false;
 }
 
-// Get author info
+// Get author info (Deprecated: use authors.ts)
 export function getAuthor(): Author {
-    if (typeof window === 'undefined') return defaultAuthor;
-    const data = localStorage.getItem(AUTHOR_KEY);
-    return data ? JSON.parse(data) : defaultAuthor;
+    return getPrimaryAuthor();
 }
 
-// Save author info
+// Save author info (Deprecated: use authors.ts)
 export function saveAuthor(author: Author): void {
-    localStorage.setItem(AUTHOR_KEY, JSON.stringify(author));
+    saveAuthorToStorage(author);
 }
 
 // Export posts as JSON

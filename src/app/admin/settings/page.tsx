@@ -22,13 +22,14 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { EmojiPicker } from '@/components/emoji-picker';
-import { getAuthor, saveAuthor, exportPosts, importPosts, getPosts } from '@/lib/storage';
+import { exportPosts, importPosts, getPosts, saveAuthor as saveAuthorToStorage } from '@/lib/storage';
 import { getSiteSettings, saveSiteSettings } from '@/lib/site-settings';
+import { getPrimaryAuthor, saveAuthor } from '@/lib/authors';
 import { Author, SiteSettings } from '@/lib/types';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
-    const [author, setAuthor] = useState<Author>({ name: '', avatar: '', bio: '' });
+    const [author, setAuthor] = useState<Author>({ id: 'primary', name: '', avatar: '', bio: '' });
     const [siteSettings, setSiteSettings] = useState<SiteSettings>({
         title: 'ezBlog',
         icon: '✍️',
@@ -46,7 +47,7 @@ export default function SettingsPage() {
     const [showNewPassword, setShowNewPassword] = useState(false);
 
     useEffect(() => {
-        const currentAuthor = getAuthor();
+        const currentAuthor = getPrimaryAuthor();
         setAuthor(currentAuthor);
 
         const currentSettings = getSiteSettings();

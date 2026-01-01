@@ -14,8 +14,8 @@ export const LANGUAGES: { code: Language; name: string; nativeName: string }[] =
 const LANGUAGE_KEY = 'ezblog_language';
 
 // Translation type
-type TranslationValue = string | Record<string, string>;
-type Translations = Record<string, TranslationValue>;
+type TranslationValue = string | { [key: string]: TranslationValue };
+type Translations = { [key: string]: TranslationValue };
 
 // Locale imports (lazy loaded)
 const locales: Record<Language, () => Promise<{ default: Translations }>> = {
