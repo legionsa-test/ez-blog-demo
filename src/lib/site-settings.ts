@@ -72,9 +72,9 @@ export function getSiteSettings(): SiteSettings {
         // Admin password handled separately
         adminPassword: localSettings.adminPassword || '',
 
-        // Notion settings (localStorage only for now)
-        notionPageUrl: localSettings.notionPageUrl,
-        enableNotionSync: localSettings.enableNotionSync,
+        // Notion settings: env var > localStorage
+        notionPageUrl: process.env.NEXT_PUBLIC_NOTION_PAGE_URL || localSettings.notionPageUrl,
+        enableNotionSync: process.env.NEXT_PUBLIC_NOTION_PAGE_URL ? true : localSettings.enableNotionSync,
     };
 }
 

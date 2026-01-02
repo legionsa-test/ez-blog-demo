@@ -17,6 +17,7 @@ import { ImageLightbox, useLightbox } from '@/components/image-lightbox';
 import { getPostBySlug, getPublishedPosts } from '@/lib/storage';
 import { incrementViewCount, getViewCount, updateReadingHistory } from '@/lib/analytics';
 import { generatePostJsonLd, generateBreadcrumbJsonLd } from '@/lib/json-ld';
+import { getPrimaryAuthor } from '@/lib/authors';
 import { Post } from '@/lib/types';
 import { format } from 'date-fns';
 
@@ -46,25 +47,68 @@ export default function BlogPostPage() {
     const { lightboxImage, closeLightbox } = useLightbox();
 
     useEffect(() => {
-        const foundPost = getPostBySlug(slug);
-        if (foundPost && foundPost.status === 'published') {
-            setPost(foundPost);
+        const loadPost = async () => {
+            // First try local storage
+            let foundPost = getPostBySlug(slug);
 
-            // Increment and get view count
-            const count = incrementViewCount(slug);
-            setViewCount(count);
+            // If not found locally, try fetching from Notion API
+            if (!foundPost) {
+                try {
+                    const response = await fetch('/api/notion/content');
+                    const data = await response.json();
 
-            // Find related posts based on tags
-            const allPosts = getPublishedPosts();
-            const related = allPosts
-                .filter((p) => p.id !== foundPost.id)
-                .filter((p) => p.tags.some((tag) => foundPost.tags.includes(tag)))
-                .slice(0, 3);
-            setRelatedPosts(related);
-        } else {
-            setNotFound(true);
-        }
-        setIsLoading(false);
+                    if (data.posts && data.posts.length > 0) {
+                        const author = getPrimaryAuthor();
+                        const notionPost = data.posts.find((p: any) => p.slug === slug && p.status === 'published');
+
+                        if (notionPost) {
+                            foundPost = {
+                                id: notionPost.notionId,
+                                title: notionPost.title,
+                                slug: notionPost.slug,
+                                excerpt: notionPost.excerpt || '',
+                                content: notionPost.content,
+                                coverImage: notionPost.coverImage || '',
+                                tags: notionPost.tags || [],
+                                status: 'published' as const,
+                                publishedAt: notionPost.publishedAt || new Date().toISOString(),
+                                createdAt: notionPost.publishedAt || new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                                author,
+                                notionId: notionPost.notionId,
+                                source: 'notion' as const,
+                                categoryId: '',
+                                scheduledAt: null,
+                                readingTime: Math.ceil((notionPost.content?.length || 0) / 1000),
+                            };
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching from Notion API:', error);
+                }
+            }
+
+            if (foundPost && foundPost.status === 'published') {
+                setPost(foundPost);
+
+                // Increment and get view count
+                const count = incrementViewCount(slug);
+                setViewCount(count);
+
+                // Find related posts based on tags
+                const allPosts = getPublishedPosts();
+                const related = allPosts
+                    .filter((p) => p.id !== foundPost!.id)
+                    .filter((p) => p.tags.some((tag) => foundPost!.tags.includes(tag)))
+                    .slice(0, 3);
+                setRelatedPosts(related);
+            } else {
+                setNotFound(true);
+            }
+            setIsLoading(false);
+        };
+
+        loadPost();
     }, [slug]);
 
     // Track reading progress

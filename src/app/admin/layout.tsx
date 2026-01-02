@@ -5,14 +5,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
     PenLine,
-    LayoutDashboard,
+    BarChart3,
     FileText,
     Settings,
     LogOut,
-    Plus,
-    FolderTree,
     File,
-    Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,11 +18,9 @@ import { useAuth, AuthProvider } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Analytics', href: '/admin', icon: BarChart3 },
     { name: 'Posts', href: '/admin/posts', icon: FileText },
     { name: 'Pages', href: '/admin/pages', icon: File },
-    { name: 'Authors', href: '/admin/authors', icon: Users },
-    { name: 'Categories', href: '/admin/categories', icon: FolderTree },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
@@ -94,13 +89,6 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                             </Link>
                         );
                     })}
-                    <Separator className="my-4" />
-                    <Button asChild className="w-full">
-                        <Link href="/admin/posts/new">
-                            <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                            New Post
-                        </Link>
-                    </Button>
                 </nav>
 
                 {/* Footer */}

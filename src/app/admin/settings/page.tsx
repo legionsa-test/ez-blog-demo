@@ -281,6 +281,12 @@ export default function SettingsPage() {
                                     {siteSettings.unsplashApiKey ? '✓ Set' : '✗ Not set'}
                                 </span>
                             </div>
+                            <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                                <span className="text-muted-foreground">NEXT_PUBLIC_NOTION_PAGE_URL</span>
+                                <span className="text-green-600 font-semibold">
+                                    {siteSettings.notionPageUrl ? '✓ Configured' : '✗ Not set'}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

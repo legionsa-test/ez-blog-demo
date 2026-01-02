@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPublishedPosts, initializeSamplePosts } from '@/lib/storage';
+import { getPublishedPosts, initializeSamplePosts, savePost } from '@/lib/storage';
 import { getSiteSettings } from '@/lib/site-settings';
+import { getPrimaryAuthor } from '@/lib/authors';
 import { Post } from '@/lib/types';
 import { EzBlog1Layout } from '@/components/themes/ezblog1';
 import { AtavistLayout } from '@/components/themes/atavist';
@@ -17,15 +18,63 @@ export default function HomePage() {
   const [theme, setTheme] = useState<'ezblog1' | 'atavist' | 'supersimple'>('ezblog1');
 
   useEffect(() => {
-    initializeSamplePosts();
-    const allPosts = getPublishedPosts();
-    setPosts(allPosts);
-    setFilteredPosts(allPosts);
+    const loadContent = async () => {
+      initializeSamplePosts();
+      const settings = getSiteSettings();
+      setTheme(settings.theme || 'ezblog1');
 
-    const settings = getSiteSettings();
-    setTheme(settings.theme || 'ezblog1');
+      // If Notion URL is configured, fetch from server API
+      if (settings.notionPageUrl) {
+        try {
+          const response = await fetch('/api/notion/content');
+          const data = await response.json();
 
-    setIsLoading(false);
+          if (data.posts && data.posts.length > 0) {
+            const author = getPrimaryAuthor();
+
+            // Merge Notion posts with local posts
+            const notionPosts: Post[] = data.posts
+              .filter((p: any) => p.status === 'published')
+              .map((post: any) => ({
+                id: post.notionId,
+                title: post.title,
+                slug: post.slug,
+                excerpt: post.excerpt || '',
+                content: post.content,
+                coverImage: post.coverImage || '',
+                tags: post.tags || [],
+                status: 'published' as const,
+                publishedAt: post.publishedAt || new Date().toISOString(),
+                createdAt: post.publishedAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                author,
+                notionId: post.notionId,
+                source: 'notion' as const,
+              }));
+
+            // Get local posts (non-Notion)
+            const localPosts = getPublishedPosts().filter(p => p.source !== 'notion');
+
+            // Combine: Notion posts + local posts
+            const allPosts = [...notionPosts, ...localPosts];
+            setPosts(allPosts);
+            setFilteredPosts(allPosts);
+            setIsLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching Notion content:', error);
+        }
+      }
+
+      // Fallback to local posts
+      const allPosts = getPublishedPosts();
+      setPosts(allPosts);
+      setFilteredPosts(allPosts);
+      setIsLoading(false);
+    };
+
+    loadContent();
   }, []);
 
   useEffect(() => {

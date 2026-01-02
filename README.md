@@ -89,6 +89,27 @@ Set these in your **Vercel Dashboard → Settings → Environment Variables**, t
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | Unsplash API key for images | `your-api-key` |
+| `NEXT_PUBLIC_NOTION_PAGE_URL` | Notion database URL for content sync | `https://notion.so/your-page-id` |
+
+### Notion Integration
+
+ezBlog syncs content directly from Notion **automatically on page load** — just like Nobelium!
+
+**How It Works (ISR-like behavior):**
+
+| Feature | Description |
+|---------|-------------|
+| **Auto-sync** | Content fetched from Notion automatically when visitors load the page |
+| **Server-side caching** | Content cached for 5 minutes (all visitors see same content) |
+| **Stale-while-revalidate** | Cached content served instantly while fresh content fetches in background |
+
+**Setup Steps:**
+1. Create a Notion database with columns: `Title`, `Slug`, `Status`, `Type`, `Tags`, `Hero Image`, `Date`
+2. Share the page publicly (Share → Publish to web)
+3. Set `NEXT_PUBLIC_NOTION_PAGE_URL` in Vercel
+4. Redeploy — that's it! Content syncs automatically.
+
+> ✅ **Like Nobelium:** Content updates appear within 5 minutes without manual sync or redeploy!
 
 > ⚠️ **Important:** Without `NEXT_PUBLIC_ADMIN_PASSWORD`, anyone can log in with the default password `admin123`!
 

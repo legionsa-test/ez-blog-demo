@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, MoreHorizontal, CheckSquare, Square, Send, Archive } from 'lucide-react';
+import { FileText, Eye, ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
     CardContent,
@@ -12,60 +11,22 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getPosts, deletePost, savePost as updatePost, updatePostsOrder } from '@/lib/storage';
+import { getViewCounts } from '@/lib/analytics';
+import { getSiteSettings } from '@/lib/site-settings';
+import { getPrimaryAuthor } from '@/lib/authors';
 import { Post } from '@/lib/types';
-import { toast } from 'sonner';
-
-// DnD Kit imports
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { SortablePostRow } from '@/components/admin/sortable-post-row';
+import { format } from 'date-fns';
 
 export default function PostsPage() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
     const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [postToDelete, setPostToDelete] = useState<Post | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    // Bulk selection state
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-
-    // DnD sensors
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
-            },
-        }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
-    );
+    const [viewCounts, setViewCounts] = useState<{ [slug: string]: number }>({});
+    const [notionUrl, setNotionUrl] = useState<string | null>(null);
+    const [lastSync, setLastSync] = useState<string | null>(null);
 
     useEffect(() => {
         loadPosts();
@@ -77,126 +38,58 @@ export default function PostsPage() {
         } else {
             setFilteredPosts(posts.filter((p) => p.status === statusFilter));
         }
-        // Clear selection when filter changes
-        setSelectedIds(new Set());
     }, [statusFilter, posts]);
 
-    const loadPosts = () => {
-        const allPosts = getPosts();
-        setPosts(allPosts);
+    const loadPosts = async () => {
+        setIsLoading(true);
+
+        const settings = getSiteSettings();
+        setNotionUrl(settings.notionPageUrl || null);
+
+        const counts = getViewCounts();
+        setViewCounts(counts);
+
+        if (settings.notionPageUrl) {
+            try {
+                const response = await fetch('/api/notion/content');
+                const data = await response.json();
+
+                if (data.posts && data.posts.length > 0) {
+                    const author = getPrimaryAuthor();
+                    const postsData: Post[] = data.posts.map((post: any) => ({
+                        id: post.notionId,
+                        title: post.title,
+                        slug: post.slug,
+                        excerpt: post.excerpt || '',
+                        content: post.content,
+                        coverImage: post.coverImage || '',
+                        tags: post.tags || [],
+                        status: post.status,
+                        publishedAt: post.publishedAt || new Date().toISOString(),
+                        createdAt: post.publishedAt || new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        author,
+                        notionId: post.notionId,
+                        source: 'notion' as const,
+                        categoryId: '',
+                        scheduledAt: null,
+                        readingTime: Math.ceil((post.content?.length || 0) / 1000),
+                    }));
+                    setPosts(postsData);
+                    setLastSync(data.source === 'cache'
+                        ? `Cached ${data.cacheAge}s ago`
+                        : 'Just synced');
+                }
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+            }
+        }
+
         setIsLoading(false);
     };
 
-    const handleDelete = () => {
-        if (postToDelete) {
-            deletePost(postToDelete.id);
-            toast.success('Post deleted successfully');
-            loadPosts();
-            setDeleteDialogOpen(false);
-            setPostToDelete(null);
-        }
-    };
-
-    const confirmDelete = (post: Post) => {
-        setPostToDelete(post);
-        setDeleteDialogOpen(true);
-    };
-
-    // Drag end handler
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-
-        if (over && active.id !== over.id) {
-            const oldIndex = filteredPosts.findIndex((p) => p.id === active.id);
-            const newIndex = filteredPosts.findIndex((p) => p.id === over.id);
-
-            const newFilteredPosts = arrayMove(filteredPosts, oldIndex, newIndex);
-            setFilteredPosts(newFilteredPosts);
-
-            // If viewing all posts, update the full order
-            if (statusFilter === 'all') {
-                const orderedIds = newFilteredPosts.map((p) => p.id);
-                updatePostsOrder(orderedIds);
-                setPosts(newFilteredPosts);
-                toast.success('Post order updated');
-            } else {
-                // When filtered, we need to maintain relative order
-                // Merge the filtered order back into the full posts array
-                const allPosts = getPosts();
-                const filteredIds = new Set(filteredPosts.map(p => p.id));
-
-                // Build new order: filtered posts in new order, then rest
-                const orderedIds: string[] = [];
-                let filteredIndex = 0;
-
-                for (const post of allPosts) {
-                    if (filteredIds.has(post.id)) {
-                        orderedIds.push(newFilteredPosts[filteredIndex].id);
-                        filteredIndex++;
-                    } else {
-                        orderedIds.push(post.id);
-                    }
-                }
-
-                updatePostsOrder(orderedIds);
-                loadPosts();
-                toast.success('Post order updated');
-            }
-        }
-    };
-
-    // Bulk selection handlers
-    const toggleSelect = (id: string) => {
-        const newSelected = new Set(selectedIds);
-        if (newSelected.has(id)) {
-            newSelected.delete(id);
-        } else {
-            newSelected.add(id);
-        }
-        setSelectedIds(newSelected);
-    };
-
-    const selectAll = () => {
-        if (selectedIds.size === filteredPosts.length) {
-            setSelectedIds(new Set());
-        } else {
-            setSelectedIds(new Set(filteredPosts.map((p) => p.id)));
-        }
-    };
-
-    const bulkPublish = () => {
-        selectedIds.forEach((id) => {
-            const post = posts.find((p) => p.id === id);
-            if (post && post.status === 'draft') {
-                updatePost({ ...post, status: 'published' });
-            }
-        });
-        toast.success(`${selectedIds.size} post(s) published`);
-        setSelectedIds(new Set());
-        loadPosts();
-    };
-
-    const bulkUnpublish = () => {
-        selectedIds.forEach((id) => {
-            const post = posts.find((p) => p.id === id);
-            if (post && post.status === 'published') {
-                updatePost({ ...post, status: 'draft' });
-            }
-        });
-        toast.success(`${selectedIds.size} post(s) moved to drafts`);
-        setSelectedIds(new Set());
-        loadPosts();
-    };
-
-    const bulkDelete = () => {
-        selectedIds.forEach((id) => {
-            deletePost(id);
-        });
-        toast.success(`${selectedIds.size} post(s) deleted`);
-        setSelectedIds(new Set());
-        setBulkDeleteDialogOpen(false);
-        loadPosts();
-    };
+    const publishedCount = posts.filter((p) => p.status === 'published').length;
+    const draftCount = posts.filter((p) => p.status === 'draft').length;
 
     if (isLoading) {
         return (
@@ -206,172 +99,123 @@ export default function PostsPage() {
         );
     }
 
-    const hasSelection = selectedIds.size > 0;
-    const allSelected = selectedIds.size === filteredPosts.length && filteredPosts.length > 0;
-
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Posts</h1>
-                    <p className="text-muted-foreground">Manage your blog content. Drag to reorder.</p>
+                    <p className="text-muted-foreground">
+                        Content synced from Notion • {lastSync}
+                    </p>
                 </div>
-                <Button asChild>
-                    <Link href="/admin/posts/new">
-                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                        New Post
-                    </Link>
-                </Button>
-            </div>
-
-            {/* Filters */}
-            <div className="flex items-center justify-between">
-                <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-                    <TabsList>
-                        <TabsTrigger value="all">
-                            All ({posts.length})
-                        </TabsTrigger>
-                        <TabsTrigger value="published">
-                            Published ({posts.filter((p) => p.status === 'published').length})
-                        </TabsTrigger>
-                        <TabsTrigger value="draft">
-                            Drafts ({posts.filter((p) => p.status === 'draft').length})
-                        </TabsTrigger>
-                    </TabsList>
-                </Tabs>
-
-                {/* Bulk Actions */}
-                {hasSelection && (
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                            {selectedIds.size} selected
-                        </span>
-                        <Button variant="outline" size="sm" onClick={bulkPublish}>
-                            <Send className="mr-2 h-4 w-4" aria-hidden="true" />
-                            Publish
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={bulkUnpublish}>
-                            <Archive className="mr-2 h-4 w-4" aria-hidden="true" />
-                            Unpublish
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setBulkDeleteDialogOpen(true)}
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                            Delete
-                        </Button>
-                    </div>
+                {notionUrl && (
+                    <Button variant="outline" asChild>
+                        <a href={notionUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Edit in Notion
+                        </a>
+                    </Button>
                 )}
             </div>
 
-            {/* Posts List with Drag and Drop */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>All Posts</CardTitle>
-                            <CardDescription>
-                                {filteredPosts.length} {filteredPosts.length === 1 ? 'post' : 'posts'} total
-                            </CardDescription>
-                        </div>
-                        {filteredPosts.length > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={selectAll}
-                                className="gap-2"
-                            >
-                                {allSelected ? (
-                                    <CheckSquare className="h-4 w-4" aria-hidden="true" />
-                                ) : (
-                                    <Square className="h-4 w-4" aria-hidden="true" />
-                                )}
-                                {allSelected ? 'Deselect All' : 'Select All'}
-                            </Button>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {filteredPosts.length === 0 ? (
-                        <div className="py-8 text-center">
-                            <p className="text-muted-foreground">
-                                {statusFilter === 'all' ? 'No posts yet.' : `No ${statusFilter} posts.`}
-                            </p>
-                            <Button asChild className="mt-4">
-                                <Link href="/admin/posts/new">Create a post</Link>
-                            </Button>
-                        </div>
-                    ) : (
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <SortableContext
-                                items={filteredPosts.map((p) => p.id)}
-                                strategy={verticalListSortingStrategy}
-                            >
-                                <div className="divide-y divide-border">
-                                    {filteredPosts.map((post) => (
-                                        <SortablePostRow
-                                            key={post.id}
-                                            post={post}
-                                            isSelected={selectedIds.has(post.id)}
-                                            onToggleSelect={toggleSelect}
-                                            onDelete={confirmDelete}
-                                        />
-                                    ))}
-                                </div>
-                            </SortableContext>
-                        </DndContext>
-                    )}
+            {/* Info Banner */}
+            <Card className="border-blue-500/50 bg-blue-500/5">
+                <CardContent className="py-4">
+                    <p className="text-sm text-muted-foreground">
+                        📝 <strong>Read-only view</strong> — Create and edit posts in your Notion database.
+                        Changes sync automatically every 5 minutes.
+                    </p>
                 </CardContent>
             </Card>
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete Post</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete &quot;{postToDelete?.title || 'Untitled'}&quot;? This
-                            action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Stats & Filters */}
+            <div className="flex items-center justify-between">
+                <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                    <TabsList>
+                        <TabsTrigger value="all">All ({posts.length})</TabsTrigger>
+                        <TabsTrigger value="published">Published ({publishedCount})</TabsTrigger>
+                        <TabsTrigger value="draft">Drafts ({draftCount})</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+                <Button variant="ghost" size="sm" onClick={loadPosts}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Refresh
+                </Button>
+            </div>
 
-            {/* Bulk Delete Confirmation Dialog */}
-            <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete {selectedIds.size} Posts</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete {selectedIds.size} selected post(s)? This
-                            action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setBulkDeleteDialogOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={bulkDelete}>
-                            Delete All
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Posts List */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>All Posts</CardTitle>
+                    <CardDescription>
+                        {filteredPosts.length} post{filteredPosts.length !== 1 ? 's' : ''} from Notion
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {!notionUrl ? (
+                        <div className="py-8 text-center">
+                            <p className="text-muted-foreground">Notion not configured.</p>
+                            <p className="text-sm text-muted-foreground mt-2">
+                                Set <code className="rounded bg-muted px-1">NEXT_PUBLIC_NOTION_PAGE_URL</code> in Vercel.
+                            </p>
+                        </div>
+                    ) : filteredPosts.length === 0 ? (
+                        <div className="py-8 text-center">
+                            <p className="text-muted-foreground">No posts found.</p>
+                            <Button variant="outline" className="mt-4" asChild>
+                                <a href={notionUrl} target="_blank" rel="noopener noreferrer">
+                                    Add posts in Notion
+                                </a>
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {filteredPosts.map((post) => (
+                                <div
+                                    key={post.id}
+                                    className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <Link
+                                                href={`/blog/${post.slug}`}
+                                                className="font-medium text-foreground hover:text-primary line-clamp-1"
+                                            >
+                                                {post.title || 'Untitled'}
+                                            </Link>
+                                            <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                                                {post.status}
+                                            </Badge>
+                                        </div>
+                                        <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+                                            <span>
+                                                {post.publishedAt
+                                                    ? format(new Date(post.publishedAt), 'MMM d, yyyy')
+                                                    : 'No date'}
+                                            </span>
+                                            {post.tags.length > 0 && (
+                                                <span>• {post.tags.slice(0, 3).join(', ')}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1 text-muted-foreground">
+                                            <Eye className="h-4 w-4" />
+                                            <span className="text-sm">{viewCounts[post.slug] || 0}</span>
+                                        </div>
+                                        <Button variant="ghost" size="sm" asChild>
+                                            <Link href={`/blog/${post.slug}`}>
+                                                View
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }
