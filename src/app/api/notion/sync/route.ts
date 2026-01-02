@@ -62,12 +62,18 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
         'a', 'strong', 'em', 'u', 's',
         'img', 'figure', 'figcaption',
         'table', 'thead', 'tbody', 'tr', 'th', 'td',
-        'aside', 'div', 'span'
+        'aside', 'div', 'span',
+        'iframe', 'video', 'source', 'object', 'embed'
     ],
     allowedAttributes: {
         'a': ['href', 'title', 'target', 'rel'],
         'img': ['src', 'alt', 'title', 'width', 'height'],
-        '*': ['class']
+        'iframe': ['src', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen', 'style', 'class'],
+        'video': ['src', 'controls', 'width', 'height', 'poster', 'autoplay', 'loop', 'muted', 'playsinline'],
+        'source': ['src', 'type'],
+        'object': ['data', 'type', 'width', 'height'],
+        'embed': ['src', 'type', 'width', 'height'],
+        '*': ['class', 'id', 'style']
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     transformTags: {
@@ -114,6 +120,7 @@ function blocksToHtml(recordMap: any, blockId: string): string {
 
         const type = childBlock.type;
         const properties = childBlock.properties || {};
+        const format = childBlock.format || {};
 
         switch (type) {
             case 'text':
@@ -148,9 +155,10 @@ function blocksToHtml(recordMap: any, blockId: string): string {
                 break;
             case 'image':
                 const src = properties.source?.[0]?.[0] || childBlock.format?.display_source;
+                const caption = extractText(properties.caption);
                 if (src && (src.startsWith('https://') || src.startsWith('http://'))) {
                     // Validate image URL
-                    html += `<img src="${src.replace(/"/g, '&quot;')}" alt="" />`;
+                    html += `<figure><img src="${src.replace(/"/g, '&quot;')}" alt="${caption || ''}" /><figcaption>${caption}</figcaption></figure>`;
                 }
                 break;
             case 'divider':
@@ -159,6 +167,106 @@ function blocksToHtml(recordMap: any, blockId: string): string {
             case 'callout':
                 html += `<aside>${extractText(properties.title)}</aside>`;
                 break;
+
+            // --- Embed Support ---
+
+            case 'video': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (source) {
+                    if (source.includes('youtube.com') || source.includes('youtu.be') || source.includes('vimeo.com')) {
+                        let embedUrl = source;
+                        if (source.includes('youtube.com/watch?v=')) {
+                            const videoId = source.split('v=')[1]?.split('&')[0];
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        } else if (source.includes('youtu.be/')) {
+                            const videoId = source.split('youtu.be/')[1];
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        } else if (source.includes('vimeo.com/')) {
+                            const videoId = source.split('vimeo.com/')[1];
+                            embedUrl = `https://player.vimeo.com/video/${videoId}`;
+                        }
+                        html += `<div class="aspect-video w-full my-4"><iframe src="${embedUrl}" class="w-full h-full rounded-lg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                    } else {
+                        html += `<video src="${source}" controls class="w-full rounded-lg my-4"></video>`;
+                    }
+                }
+                break;
+            }
+
+            case 'tweet': {
+                const source = properties?.source?.[0]?.[0];
+                if (source) {
+                    html += `<div class="my-4 flex justify-center"><blockquote class="twitter-tweet"><a href="${source}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></div>`;
+                }
+                break;
+            }
+
+            case 'bookmark': {
+                const link = properties?.link?.[0]?.[0];
+                const title = extractText(properties?.title) || link;
+                const description = extractText(properties?.description);
+                const cover = format?.bookmark_cover;
+
+                if (link) {
+                    html += `
+                        <a href="${link}" target="_blank" rel="noopener noreferrer" class="not-prose block my-4 overflow-hidden rounded-lg border border-border bg-card transition-colors hover:bg-muted/50 no-underline">
+                            <div class="flex h-full">
+                                <div class="flex-1 p-4">
+                                    <div class="font-medium text-foreground line-clamp-1">${title}</div>
+                                    ${description ? `<div class="mt-1 text-sm text-muted-foreground line-clamp-2">${description}</div>` : ''}
+                                    <div class="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                        <span class="truncate">${link}</span>
+                                    </div>
+                                </div>
+                                ${cover ? `<div class="relative w-1/3 min-w-[120px] bg-muted"><img src="${cover}" alt="${title}" class="absolute inset-0 h-full w-full object-cover" /></div>` : ''}
+                            </div>
+                        </a>
+                    `;
+                }
+                break;
+            }
+
+            case 'embed':
+            case 'maps':
+            case 'figma':
+            case 'typeform':
+            case 'codepen':
+            case 'gist': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (source) {
+                    html += `<div class="aspect-video w-full my-4"><iframe src="${source}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
+                }
+                break;
+            }
+
+            case 'drive':
+            case 'google_drive': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (source) {
+                    html += `<div class="w-full my-4"><iframe src="${source}" class="w-full h-[500px] rounded-lg border border-border" frameborder="0" allowfullscreen></iframe></div>`;
+                }
+                break;
+            }
+
+            case 'pdf': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (source) {
+                    html += `<div class="w-full h-[600px] my-4"><object data="${source}" type="application/pdf" class="w-full h-full rounded-lg border border-border"><p>Unable to display PDF file. <a href="${source}">Download</a> instead.</p></object></div>`;
+                }
+                break;
+            }
+
+            case 'file': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                const caption = extractText(properties?.caption) || source?.split('/').pop() || 'Download File';
+                if (source) {
+                    html += `<a href="${source}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50 my-4"><span class="font-medium">${caption}</span></a>`;
+                }
+                break;
+            }
+
+            // --- End Embed Support ---
+
             default:
                 // Try to extract text for unknown types
                 const fallbackText = extractText(properties.title);

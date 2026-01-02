@@ -67,14 +67,10 @@ All settings use **environment variables**. Set in Vercel → Redeploy.
 | `NEXT_PUBLIC_THEME` | `ezblog1`, `atavist`, `supersimple` | `supersimple` |
 | `NEXT_PUBLIC_AUTHOR_NAME` | Author name | `Author` |
 | `NEXT_PUBLIC_AUTHOR_AVATAR` | Author avatar URL | — |
+
 | `NEXT_PUBLIC_AUTHOR_BIO` | Author bio | — |
 | `NEXT_PUBLIC_SHOW_FOOTER` | Show footer | `true` |
 | `NEXT_PUBLIC_SHOW_RSS` | Show RSS link | `true` |
-
-### Integrations
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | For cover image search |
 
 ---
 
@@ -93,6 +89,7 @@ Create a Notion database with these columns (aliases supported):
 | `Tags` | Multi-select | `tags`, `categories`, `labels` | Tag names |
 | `Summary` | Text | `summary`, `excerpt`, `description`, `subtitle`, `intro` | Short description |
 | `Hero Image` | URL | `hero image`, `cover`, `image`, `thumbnail`, `banner` | Cover image URL |
+| `Hero Size` | Select | `hero size`, `herosize`, `hero_size` | `Big`, `Small` |
 | `Date` | Date | `date`, `published_date`, `publish date`, `created` | Publish date |
 
 ### 2. Make Public

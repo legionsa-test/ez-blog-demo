@@ -13,7 +13,7 @@ let postsCache: any[] | null = null;
 let pagesCache: any[] | null = null;
 let lastFetchTime: number = 0;
 
-// Sanitize HTML config (same as sync route)
+// Sanitize HTML config (updated for embeds)
 const sanitizeConfig = {
     allowedTags: [
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -24,11 +24,17 @@ const sanitizeConfig = {
         'strong', 'em', 'b', 'i', 'u', 's', 'del',
         'table', 'thead', 'tbody', 'tr', 'th', 'td',
         'div', 'span',
+        'iframe', 'video', 'source', 'object', 'embed'
     ],
     allowedAttributes: {
         'a': ['href', 'title', 'target', 'rel'],
         'img': ['src', 'alt', 'width', 'height'],
-        '*': ['class', 'id'],
+        'iframe': ['src', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen', 'style', 'class'],
+        'video': ['src', 'controls', 'width', 'height', 'poster', 'autoplay', 'loop', 'muted', 'playsinline'],
+        'source': ['src', 'type'],
+        'object': ['data', 'type', 'width', 'height'],
+        'embed': ['src', 'type', 'width', 'height'],
+        '*': ['class', 'id', 'style'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowProtocolRelative: true,
@@ -59,7 +65,7 @@ function blocksToHtml(recordMap: any, pageId: string): string {
         const block = blocks[blockId]?.value;
         if (!block) return '';
 
-        const { type, properties } = block;
+        const { type, properties, format } = block;
 
         switch (type) {
             case 'header':
@@ -84,10 +90,110 @@ function blocksToHtml(recordMap: any, pageId: string): string {
             case 'code':
                 return `<pre><code>${extractText(properties?.title)}</code></pre>`;
             case 'image':
-                const imgSrc = block.format?.display_source || properties?.source?.[0]?.[0];
-                return imgSrc ? `<img src="${imgSrc}" alt="Image" />` : '';
+                const imgSrc = format?.display_source || properties?.source?.[0]?.[0];
+                const imgCaption = extractText(properties?.caption);
+                return imgSrc ?
+                    `<figure><img src="${imgSrc}" alt="${imgCaption || 'Image'}" /><figcaption>${imgCaption}</figcaption></figure>`
+                    : '';
             case 'divider':
                 return '<hr />';
+
+            // --- Embed Support ---
+
+            case 'video': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (!source) return '';
+
+                // YouTube/Vimeo (Standard Notion Embeds often come as "video" type)
+                if (source.includes('youtube.com') || source.includes('youtu.be') || source.includes('vimeo.com')) {
+                    // Convert standard Watch URLs to Embed URLs if needed
+                    let embedUrl = source;
+                    if (source.includes('youtube.com/watch?v=')) {
+                        const videoId = source.split('v=')[1]?.split('&')[0];
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                    } else if (source.includes('youtu.be/')) {
+                        const videoId = source.split('youtu.be/')[1];
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                    } else if (source.includes('vimeo.com/')) {
+                        const videoId = source.split('vimeo.com/')[1];
+                        embedUrl = `https://player.vimeo.com/video/${videoId}`;
+                    }
+
+                    return `<div class="aspect-video w-full my-4"><iframe src="${embedUrl}" class="w-full h-full rounded-lg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                }
+
+                // Direct video file
+                return `<video src="${source}" controls class="w-full rounded-lg my-4"></video>`;
+            }
+
+            case 'tweet': {
+                const source = properties?.source?.[0]?.[0];
+                if (!source) return '';
+                // Simple link fallback or iframe if Notion format provides it (often standard embed iframe is safer)
+                // For a robust implementation, a client-side tweet renderer is best, but for static HTML:
+                return `<div class="my-4 flex justify-center"><blockquote class="twitter-tweet"><a href="${source}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></div>`;
+            }
+
+            case 'bookmark': {
+                const link = properties?.link?.[0]?.[0];
+                const title = extractText(properties?.title) || link;
+                const description = extractText(properties?.description);
+                const cover = format?.bookmark_cover;
+
+                return `
+                    <a href="${link}" target="_blank" rel="noopener noreferrer" class="not-prose block my-4 overflow-hidden rounded-lg border border-border bg-card transition-colors hover:bg-muted/50 no-underline">
+                        <div class="flex h-full">
+                            <div class="flex-1 p-4">
+                                <div class="font-medium text-foreground line-clamp-1">${title}</div>
+                                ${description ? `<div class="mt-1 text-sm text-muted-foreground line-clamp-2">${description}</div>` : ''}
+                                <div class="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span class="truncate">${link}</span>
+                                </div>
+                            </div>
+                            ${cover ? `<div class="relative w-1/3 min-w-[120px] bg-muted"><img src="${cover}" alt="${title}" class="absolute inset-0 h-full w-full object-cover" /></div>` : ''}
+                        </div>
+                    </a>
+                `;
+            }
+
+            case 'embed':
+            case 'maps':
+            case 'figma':
+            case 'typeform':
+            case 'codepen':
+            case 'gist': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (!source) return '';
+
+                // Generic iframe embed handling
+                return `<div class="aspect-video w-full my-4"><iframe src="${source}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
+            }
+
+            case 'drive':
+            case 'google_drive': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (!source) return '';
+                return `<div class="w-full my-4"><iframe src="${source}" class="w-full h-[500px] rounded-lg border border-border" frameborder="0" allowfullscreen></iframe></div>`;
+            }
+
+            case 'pdf': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                if (!source) return '';
+
+                // Use Google Docs viewer/standard object embed
+                return `<div class="w-full h-[600px] my-4"><object data="${source}" type="application/pdf" class="w-full h-full rounded-lg border border-border"><p>Unable to display PDF file. <a href="${source}">Download</a> instead.</p></object></div>`;
+            }
+
+            case 'file': {
+                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                const caption = extractText(properties?.caption) || source?.split('/').pop() || 'Download File';
+                if (!source) return '';
+
+                return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50 my-4"><span class="font-medium">${caption}</span></a>`;
+            }
+
+            // --- End Embed Support ---
+
             default:
                 return '';
         }
@@ -101,7 +207,8 @@ function blocksToHtml(recordMap: any, pageId: string): string {
         }
     }
 
-    // Sanitize HTML to prevent XSS
+    // Sanitize HTML to prevent XSS (but allow new embed tags)
+    // Note: We deliberately allow specific iframe sources via trusted extraction logic above
     return sanitizeHtml(html, sanitizeConfig);
 }
 

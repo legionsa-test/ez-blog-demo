@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, PenLine } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -10,6 +10,12 @@ import { getSiteSettings } from '@/lib/site-settings';
 import { getPublishedPages } from '@/lib/pages';
 import { useI18n } from '@/lib/i18n';
 import { SiteSettings, Page } from '@/lib/types';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,6 +93,11 @@ export function Header() {
         ...pages.map((page) => ({ name: page.title, href: `/${page.slug}` })),
     ];
 
+    // Limit visible items to 3, rest go to overflow menu
+    const MAX_VISIBLE_ITEMS = 3;
+    const visibleNavigation = navigation.slice(0, MAX_VISIBLE_ITEMS);
+    const overflowNavigation = navigation.slice(MAX_VISIBLE_ITEMS);
+
     return (
         <header
             className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled
@@ -106,7 +117,7 @@ export function Header() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
-                    {navigation.map((item) => (
+                    {visibleNavigation.map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
@@ -115,6 +126,23 @@ export function Header() {
                             {item.name}
                         </Link>
                     ))}
+                    {overflowNavigation.length > 0 && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                                    More
+                                    <ChevronDown className="h-4 w-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {overflowNavigation.map((item) => (
+                                    <DropdownMenuItem key={item.href} asChild>
+                                        <Link href={item.href}>{item.name}</Link>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </nav>
 
                 {/* Desktop Actions */}
