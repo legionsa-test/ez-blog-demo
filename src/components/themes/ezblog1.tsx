@@ -30,8 +30,10 @@ export function EzBlog1Layout({
     isLoading,
 }: EzBlog1LayoutProps) {
     const allTags = Array.from(new Set(posts.flatMap((post) => post.tags)));
-    const featuredPost = filteredPosts[0];
-    const remainingPosts = filteredPosts.slice(1);
+    // Featured post: first post with 'big' coverImageSize, or first post if none have 'big'
+    const featuredPost = filteredPosts.find((post) => post.coverImageSize === 'big') ||
+        (filteredPosts.length > 0 && filteredPosts[0].coverImageSize !== 'small' ? filteredPosts[0] : null);
+    const remainingPosts = filteredPosts.filter((post) => post !== featuredPost);
 
     return (
         <div className="min-h-screen">

@@ -264,6 +264,10 @@ async function fetchNotionContent(pageUrl: string) {
                 const coverImage = props['hero image'] || props['heroimage'] || props['hero_image'] ||
                     props.cover || props.image || props.thumbnail || props.banner || '';
 
+                // Hero Size: check multiple possible column names (Big or Small)
+                const heroSizeValue = String(props['hero size'] || props['herosize'] || props['hero_size'] || '').toLowerCase();
+                const coverImageSize = heroSizeValue === 'big' ? 'big' : heroSizeValue === 'small' ? 'small' : undefined;
+
                 return {
                     notionId: row.id,
                     title,
@@ -271,6 +275,7 @@ async function fetchNotionContent(pageUrl: string) {
                     excerpt,
                     content,
                     coverImage,
+                    coverImageSize,
                     tags,
                     status: isPublished ? 'published' : 'draft',
                     publishedAt,

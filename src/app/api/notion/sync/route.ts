@@ -329,6 +329,10 @@ export async function POST(request: NextRequest) {
                             excerpt: props.summary || props.excerpt || props.description || '',
                             content,
                             coverImage: props['hero image'] || props['heroimage'] || props['hero_image'] || props.cover || props.image || '',
+                            coverImageSize: (() => {
+                                const heroSizeValue = String(props['hero size'] || props['herosize'] || props['hero_size'] || '').toLowerCase();
+                                return heroSizeValue === 'big' ? 'big' : heroSizeValue === 'small' ? 'small' : undefined;
+                            })(),
                             tags: props.tags || [],
                             status: (props.status === 'Published' || props.published === true) ? 'published' : 'draft',
                             publishedAt: props.date || props.published_date || null,

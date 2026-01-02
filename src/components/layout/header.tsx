@@ -19,9 +19,44 @@ export function Header() {
     const { t } = useI18n();
 
     useEffect(() => {
-        const loadSettings = () => {
+        const loadSettings = async () => {
             setSettings(getSiteSettings());
-            setPages(getPublishedPages());
+
+            // Get local pages first
+            const localPages = getPublishedPages();
+
+            // Try to fetch Notion pages
+            try {
+                const response = await fetch('/api/notion/content');
+                const data = await response.json();
+
+                if (data.pages && data.pages.length > 0) {
+                    // Convert Notion pages to Page format
+                    const notionPages: Page[] = data.pages
+                        .filter((p: any) => p.status === 'published')
+                        .map((page: any) => ({
+                            id: page.notionId,
+                            slug: page.slug,
+                            title: page.title,
+                            content: page.content || '',
+                            published: true,
+                            status: 'published',
+                            createdAt: page.publishedAt || new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                            notionId: page.notionId,
+                        }));
+
+                    // Merge: Notion pages + local pages (exclude duplicates by slug)
+                    const notionSlugs = new Set(notionPages.map(p => p.slug));
+                    const uniqueLocalPages = localPages.filter(p => !notionSlugs.has(p.slug));
+                    setPages([...notionPages, ...uniqueLocalPages]);
+                } else {
+                    setPages(localPages);
+                }
+            } catch (error) {
+                console.error('Error fetching Notion pages:', error);
+                setPages(localPages);
+            }
         };
         loadSettings();
 

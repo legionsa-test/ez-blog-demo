@@ -24,24 +24,58 @@ export default function PageSlugPage() {
     const [notFoundState, setNotFoundState] = useState(false);
 
     useEffect(() => {
-        // Don't handle reserved routes
-        if (RESERVED_ROUTES.includes(slug)) {
+        const loadPage = async () => {
+            // Don't handle reserved routes
+            if (RESERVED_ROUTES.includes(slug)) {
+                setNotFoundState(true);
+                setIsLoading(false);
+                return;
+            }
+
+            // First check if it's a published page in localStorage
+            const foundPage = getPageBySlug(slug);
+            if (foundPage && foundPage.published) {
+                setPage(foundPage);
+                setIsLoading(false);
+                return;
+            }
+
+            // Try to fetch from Notion API
+            try {
+                const response = await fetch('/api/notion/content');
+                const data = await response.json();
+
+                if (data.pages && data.pages.length > 0) {
+                    const notionPage = data.pages.find((p: any) =>
+                        p.slug === slug && p.status === 'published'
+                    );
+
+                    if (notionPage) {
+                        setPage({
+                            id: notionPage.notionId,
+                            slug: notionPage.slug,
+                            title: notionPage.title,
+                            content: notionPage.content || '',
+                            published: true,
+                            status: 'published',
+                            createdAt: notionPage.publishedAt || new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                            notionId: notionPage.notionId,
+                        });
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching Notion page:', error);
+            }
+
+            // If no page found, show 404
             setNotFoundState(true);
             setIsLoading(false);
-            return;
-        }
+        };
 
-        // First check if it's a published page
-        const foundPage = getPageBySlug(slug);
-        if (foundPage && foundPage.published) {
-            setPage(foundPage);
-            setIsLoading(false);
-            return;
-        }
-
-        // If no page found, show 404
-        setNotFoundState(true);
-        setIsLoading(false);
+        loadPage();
     }, [slug]);
 
     if (isLoading) {

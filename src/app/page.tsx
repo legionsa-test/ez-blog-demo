@@ -32,7 +32,7 @@ export default function HomePage() {
           if (data.posts && data.posts.length > 0) {
             const author = getPrimaryAuthor();
 
-            // Merge Notion posts with local posts
+            // Notion posts only (don't merge with localStorage when Notion is configured)
             const notionPosts: Post[] = data.posts
               .filter((p: any) => p.status === 'published')
               .map((post: any) => ({
@@ -42,6 +42,7 @@ export default function HomePage() {
                 excerpt: post.excerpt || '',
                 content: post.content,
                 coverImage: post.coverImage || '',
+                coverImageSize: post.coverImageSize,
                 tags: post.tags || [],
                 status: 'published' as const,
                 publishedAt: post.publishedAt || new Date().toISOString(),
@@ -52,13 +53,9 @@ export default function HomePage() {
                 source: 'notion' as const,
               }));
 
-            // Get local posts (non-Notion)
-            const localPosts = getPublishedPosts().filter(p => p.source !== 'notion');
-
-            // Combine: Notion posts + local posts
-            const allPosts = [...notionPosts, ...localPosts];
-            setPosts(allPosts);
-            setFilteredPosts(allPosts);
+            // When Notion is configured, only show Notion posts (no localStorage mixing)
+            setPosts(notionPosts);
+            setFilteredPosts(notionPosts);
             setIsLoading(false);
             return;
           }

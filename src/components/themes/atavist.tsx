@@ -140,8 +140,8 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
                                             <button
                                                 onClick={() => handleTagSelect(null)}
                                                 className={`rounded-full px-3 py-1 text-xs transition-colors ${!selectedTag
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                                     }`}
                                             >
                                                 All
@@ -151,8 +151,8 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
                                                     key={tag}
                                                     onClick={() => handleTagSelect(tag === selectedTag ? null : tag)}
                                                     className={`rounded-full px-3 py-1 text-xs transition-colors ${selectedTag === tag
-                                                            ? 'bg-primary text-primary-foreground'
-                                                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                                         }`}
                                                 >
                                                     {tag}
@@ -251,8 +251,8 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
                                 <button
                                     onClick={() => { setSelectedTag(null); setSidebarOpen(false); }}
                                     className={`rounded-full px-3 py-1 text-xs transition-colors ${!selectedTag
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-muted text-muted-foreground'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-muted text-muted-foreground'
                                         }`}
                                 >
                                     All
@@ -262,8 +262,8 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
                                         key={tag}
                                         onClick={() => { setSelectedTag(tag === selectedTag ? null : tag); setSidebarOpen(false); }}
                                         className={`rounded-full px-3 py-1 text-xs transition-colors ${selectedTag === tag
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-muted text-muted-foreground'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-muted text-muted-foreground'
                                             }`}
                                     >
                                         {tag}
@@ -292,7 +292,13 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
                                 className="group block"
                             >
                                 <article
-                                    className={`relative overflow-hidden ${index === 0 ? 'h-[80vh] min-h-[500px]' : 'h-[50vh] min-h-[350px]'
+                                    className={`relative overflow-hidden ${post.coverImageSize === 'big'
+                                        ? 'h-[80vh] min-h-[500px]'
+                                        : post.coverImageSize === 'small'
+                                            ? 'h-[50vh] min-h-[350px]'
+                                            : index === 0
+                                                ? 'h-[80vh] min-h-[500px]'
+                                                : 'h-[50vh] min-h-[350px]'
                                         }`}
                                 >
                                     {/* Background Image */}
@@ -321,9 +327,13 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
 
                                             {/* Title */}
                                             <h2
-                                                className={`mt-3 font-serif font-bold leading-tight text-white ${index === 0
+                                                className={`mt-3 font-serif font-bold leading-tight text-white ${post.coverImageSize === 'big'
                                                         ? 'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl'
-                                                        : 'text-2xl sm:text-3xl lg:text-4xl'
+                                                        : post.coverImageSize === 'small'
+                                                            ? 'text-2xl sm:text-3xl lg:text-4xl'
+                                                            : index === 0
+                                                                ? 'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl'
+                                                                : 'text-2xl sm:text-3xl lg:text-4xl'
                                                     }`}
                                             >
                                                 {post.title}

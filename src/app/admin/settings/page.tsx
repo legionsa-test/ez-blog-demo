@@ -345,7 +345,7 @@ export default function SettingsPage() {
 
                     <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
                         <p className="font-medium mb-1">Notion Database Columns:</p>
-                        <p><strong>Title</strong> (required), <strong>Slug</strong>, <strong>Status</strong> (Published/Draft), <strong>Type</strong> (Post/Page), <strong>Tags</strong>, <strong>Hero Image</strong>, <strong>Date</strong></p>
+                        <p><strong>Title</strong> (required), <strong>Slug</strong>, <strong>Status</strong> (Published/Draft), <strong>Type</strong> (Post/Page), <strong>Tags</strong>, <strong>Hero Image</strong>, <strong>Hero Size</strong> (Big/Small), <strong>Date</strong></p>
                     </div>
                 </CardContent>
             </Card>

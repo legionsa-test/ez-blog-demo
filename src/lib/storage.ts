@@ -173,37 +173,9 @@ export function importPosts(json: string): boolean {
     }
 }
 
-// Initialize with sample post if empty (skip if Notion is configured)
+// Initialize sample posts function (deprecated - no longer creates sample posts)
 export function initializeSamplePosts(): void {
-    // Skip sample posts if Notion URL is configured
-    if (process.env.NEXT_PUBLIC_NOTION_PAGE_URL) {
-        return;
-    }
-
-    const posts = getPosts();
-    if (posts.length === 0) {
-        const samplePost = {
-            title: 'Welcome to ezBlog',
-            excerpt: 'This is your first blog post. Edit or delete it, then start writing!',
-            content: `
-        <h2>Welcome to ezBlog!</h2>
-        <p>This is a sample blog post to help you get started. ezBlog is a modern, headless CMS that stores your content locally in your browser.</p>
-        <h3>Features</h3>
-        <ul>
-          <li>Beautiful, responsive design with dark/light mode</li>
-          <li>Rich text editing with Tiptap</li>
-          <li>Import images from Unsplash</li>
-          <li>SEO-friendly with proper meta tags</li>
-          <li>No database required - content stored locally</li>
-        </ul>
-        <p>Start creating amazing content today!</p>
-      `,
-            coverImage: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200',
-            tags: ['welcome', 'tutorial'],
-            categoryId: null,
-            status: 'published' as const,
-            scheduledAt: null,
-        };
-        savePost(samplePost);
-    }
+    // Sample posts are no longer created automatically
+    // Content is expected to come from Notion or be created manually via admin
+    return;
 }

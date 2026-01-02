@@ -48,44 +48,60 @@ export default function BlogPostPage() {
 
     useEffect(() => {
         const loadPost = async () => {
-            // First try local storage
-            let foundPost = getPostBySlug(slug);
+            let foundPost: Post | null = null;
+            const author = getPrimaryAuthor();
 
-            // If not found locally, try fetching from Notion API
-            if (!foundPost) {
-                try {
-                    const response = await fetch('/api/notion/content');
-                    const data = await response.json();
+            // Try fetching from Notion API first
+            try {
+                const response = await fetch('/api/notion/content');
+                const data = await response.json();
 
-                    if (data.posts && data.posts.length > 0) {
-                        const author = getPrimaryAuthor();
-                        const notionPost = data.posts.find((p: any) => p.slug === slug && p.status === 'published');
+                if (data.posts && data.posts.length > 0) {
+                    const notionPost = data.posts.find((p: any) => p.slug === slug && p.status === 'published');
 
-                        if (notionPost) {
-                            foundPost = {
-                                id: notionPost.notionId,
-                                title: notionPost.title,
-                                slug: notionPost.slug,
-                                excerpt: notionPost.excerpt || '',
-                                content: notionPost.content,
-                                coverImage: notionPost.coverImage || '',
-                                tags: notionPost.tags || [],
-                                status: 'published' as const,
-                                publishedAt: notionPost.publishedAt || new Date().toISOString(),
-                                createdAt: notionPost.publishedAt || new Date().toISOString(),
-                                updatedAt: new Date().toISOString(),
-                                author,
-                                notionId: notionPost.notionId,
-                                source: 'notion' as const,
-                                categoryId: '',
-                                scheduledAt: null,
-                                readingTime: Math.ceil((notionPost.content?.length || 0) / 1000),
-                            };
-                        }
+                    if (notionPost) {
+                        foundPost = {
+                            id: notionPost.notionId,
+                            title: notionPost.title,
+                            slug: notionPost.slug,
+                            excerpt: notionPost.excerpt || '',
+                            content: notionPost.content,
+                            coverImage: notionPost.coverImage || '',
+                            tags: notionPost.tags || [],
+                            status: 'published' as const,
+                            publishedAt: notionPost.publishedAt || new Date().toISOString(),
+                            createdAt: notionPost.publishedAt || new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                            author,
+                            notionId: notionPost.notionId,
+                            source: 'notion' as const,
+                            categoryId: '',
+                            scheduledAt: null,
+                            readingTime: Math.ceil((notionPost.content?.length || 0) / 1000),
+                        };
                     }
-                } catch (error) {
-                    console.error('Error fetching from Notion API:', error);
                 }
+
+                // If Notion is configured (has posts), don't fall back to localStorage
+                if (data.source !== 'none' && data.posts && data.posts.length > 0) {
+                    // Notion is the source, don't check localStorage
+                    if (foundPost) {
+                        setPost(foundPost);
+                        const count = incrementViewCount(slug);
+                        setViewCount(count);
+                    } else {
+                        setNotFound(true);
+                    }
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (error) {
+                console.error('Error fetching from Notion API:', error);
+            }
+
+            // Fallback to localStorage only if Notion is not configured
+            if (!foundPost) {
+                foundPost = getPostBySlug(slug);
             }
 
             if (foundPost && foundPost.status === 'published') {
