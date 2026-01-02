@@ -140,7 +140,7 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
             </header>
 
             {/* Main Content */}
-            <main className="mx-auto max-w-2xl px-6 pb-24">
+            <main className="mx-auto max-w-2xl px-6 pb-24 min-h-[60vh]">
                 {/* Welcome Section */}
                 <section className="mb-16">
                     <h1
@@ -170,6 +170,7 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                                         src={latestPost.coverImage}
                                         alt={latestPost.title}
                                         fill
+                                        priority
                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
                                 </div>

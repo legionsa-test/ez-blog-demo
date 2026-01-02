@@ -1,60 +1,45 @@
-
-import { getPublishedPosts } from '@/lib/storage';
-import { getSiteSettings } from '@/lib/site-settings';
 import { fetchNotionContent } from '@/lib/notion';
-import { Post } from '@/lib/types';
-import { format } from 'date-fns';
 
 export async function GET() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com';
+  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || 'ezBlog';
+  const siteDescription = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'Insights, stories, and ideas.';
 
-  // Fetch settings
-  const settings = getSiteSettings();
-  const siteTitle = settings?.title || 'ezBlog';
-  const siteDescription = settings?.description || 'Insights, stories, and ideas.';
-
-  // Fetch Local posts
-  const localPosts = getPublishedPosts();
-
-  // Fetch Notion posts
-  let notionPosts: Post[] = [];
+  // Fetch Notion posts (server-safe)
+  let posts: any[] = [];
   try {
     const notionData = await fetchNotionContent();
     if (notionData.posts) {
-      notionPosts = notionData.posts.filter((p: any) => p.status === 'published');
+      posts = notionData.posts.filter((p: any) => p.status === 'published');
     }
   } catch (error) {
     console.error('Failed to fetch Notion posts for RSS:', error);
   }
 
-  // Merge posts (Notion wins on conflict)
-  const notionSlugs = new Set(notionPosts.map(p => p.slug));
-  const uniqueLocalPosts = localPosts.filter(p => !notionSlugs.has(p.slug));
-
-  const allPosts = [...notionPosts, ...uniqueLocalPosts].sort((a, b) =>
-    new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime()
+  // Sort by date
+  posts.sort((a, b) =>
+    new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
   );
 
   // Escape XML special characters
-  const escapeXml = (str: string) => str.replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '\'': return '&apos;';
-      case '"': return '&quot;';
-      default: return c;
-    }
-  });
+  const escapeXml = (str: string) => {
+    if (!str) return '';
+    return str.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&apos;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
+  };
 
-  const rssItems = allPosts.map(post => {
+  const rssItems = posts.map(post => {
     const link = `${siteUrl}/blog/${post.slug}`;
-    const pubDate = new Date(post.publishedAt || post.createdAt).toUTCString();
+    const pubDate = new Date(post.publishedAt || post.createdAt || Date.now()).toUTCString();
     const description = escapeXml(post.excerpt || '');
-
-    // CData for HTML content if needed, but standard description is usually text
-    // We'll use content:encoded for full HTML content if supported, otherwise just description
-    // For simplicity and compatibility, we stick to standard fields
 
     return `
     <item>
