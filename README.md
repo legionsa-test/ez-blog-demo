@@ -64,7 +64,7 @@ All settings use **environment variables**. Set in Vercel → Redeploy.
 |----------|-------------|---------|
 | `NEXT_PUBLIC_SITE_TITLE` | Site title | `ezBlog` |
 | `NEXT_PUBLIC_SITE_ICON` | Site emoji | `✍️` |
-| `NEXT_PUBLIC_THEME` | `ezblog1`, `atavist`, `supersimple` | `ezblog1` |
+| `NEXT_PUBLIC_THEME` | `ezblog1`, `atavist`, `supersimple` | `supersimple` |
 | `NEXT_PUBLIC_AUTHOR_NAME` | Author name | `Author` |
 | `NEXT_PUBLIC_AUTHOR_AVATAR` | Author avatar URL | — |
 | `NEXT_PUBLIC_AUTHOR_BIO` | Author bio | — |
