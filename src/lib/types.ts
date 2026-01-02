@@ -79,6 +79,7 @@ export interface SiteSettings {
   welcomeText?: string;
   notionPageUrl?: string;
   enableNotionSync?: boolean;
+  showRssFeed?: boolean;
 }
 
 export interface Page {

@@ -347,6 +347,35 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+            {/* RSS Feed Settings */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>RSS Feed</CardTitle>
+                    <CardDescription>
+                        Configure your blog&apos;s RSS feed visibility.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between space-x-2">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="show-rss">Show RSS Feed Link</Label>
+                            <div className="text-[0.8rem] text-muted-foreground">
+                                Display RSS feed link in the navigation menu
+                            </div>
+                        </div>
+                        <Switch
+                            id="show-rss"
+                            checked={siteSettings.showRssFeed === true}
+                            onCheckedChange={(checked) => {
+                                setSiteSettings({ ...siteSettings, showRssFeed: checked });
+                                saveSiteSettings({ showRssFeed: checked });
+                                toast.success(checked ? 'RSS feed link enabled' : 'RSS feed link hidden');
+                            }}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Notion Integration */}
             <Card>
                 <CardHeader>
@@ -640,6 +669,6 @@ export default function SettingsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

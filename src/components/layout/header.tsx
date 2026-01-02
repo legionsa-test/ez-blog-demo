@@ -43,6 +43,7 @@ export function Header() {
     // Static navigation items (always shown)
     const staticNavigation = [
         { name: t('nav.home'), href: '/' },
+        ...(settings?.showRssFeed ? [{ name: 'RSS', href: '/feed.xml' }] : []),
     ];
 
     // Combine static and dynamic page links
