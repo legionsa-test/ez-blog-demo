@@ -32,15 +32,7 @@ export default function PageSlugPage() {
                 return;
             }
 
-            // First check if it's a published page in localStorage
-            const foundPage = getPageBySlug(slug);
-            if (foundPage && foundPage.published) {
-                setPage(foundPage);
-                setIsLoading(false);
-                return;
-            }
-
-            // Try to fetch from Notion API
+            // check Notion API first (Source of Truth)
             try {
                 const response = await fetch('/api/notion/content');
                 const data = await response.json();
@@ -68,6 +60,14 @@ export default function PageSlugPage() {
                 }
             } catch (error) {
                 console.error('Error fetching Notion page:', error);
+            }
+
+            // Fallback to local storage if not found in Notion
+            const foundPage = getPageBySlug(slug);
+            if (foundPage && foundPage.published) {
+                setPage(foundPage);
+                setIsLoading(false);
+                return;
             }
 
             // If no page found, show 404

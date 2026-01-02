@@ -46,10 +46,13 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
     // Supersimple has its own complete layout
     if (isSupersimpleTheme) {
         return (
-            <div className="relative min-h-screen">
-                <main id="main-content" role="main">
-                    {children}
-                </main>
+            <div className="relative min-h-screen flex flex-col">
+                <div className="flex-1">
+                    <main id="main-content" role="main">
+                        {children}
+                    </main>
+                </div>
+                <Footer />
             </div>
         );
     }

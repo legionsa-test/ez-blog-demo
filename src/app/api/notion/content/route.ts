@@ -165,8 +165,16 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 const source = properties?.source?.[0]?.[0] || format?.display_source;
                 if (!source) return '';
 
+                let embedSrc = source;
+                // Handle Figma specifically
+                if (source.includes('figma.com/file') || source.includes('figma.com/proto') || source.includes('figma.com/design')) {
+                    if (!source.includes('embed_host')) {
+                        embedSrc = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
+                    }
+                }
+
                 // Generic iframe embed handling
-                return `<div class="aspect-video w-full my-4"><iframe src="${source}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
+                return `<div class="aspect-video w-full my-4"><iframe src="${embedSrc}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
             }
 
             case 'drive':
@@ -372,7 +380,14 @@ async function fetchNotionContent(pageUrl: string) {
                     props.cover || props.image || props.thumbnail || props.banner || '';
 
                 // Hero Size: check multiple possible column names (Big or Small)
-                const heroSizeValue = String(props['hero size'] || props['herosize'] || props['hero_size'] || '').toLowerCase();
+                const heroSizeValue = String(
+                    props['hero size'] ||
+                    props['Hero Size'] ||
+                    props['herosize'] ||
+                    props['hero_size'] ||
+                    props['HeroSize'] ||
+                    ''
+                ).toLowerCase();
                 const coverImageSize = heroSizeValue === 'big' ? 'big' : heroSizeValue === 'small' ? 'small' : undefined;
 
                 return {

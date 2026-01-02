@@ -3,12 +3,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Post, SiteSettings, Page } from '@/lib/types';
 import { getSiteSettings } from '@/lib/site-settings';
 import { getPublishedPages } from '@/lib/pages';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { format } from 'date-fns';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface SupersimpleLayoutProps {
     posts: Post[];
@@ -18,29 +24,50 @@ interface SupersimpleLayoutProps {
 export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) {
     const [settings, setSettings] = useState<SiteSettings | null>(null);
     const [pages, setPages] = useState<Page[]>([]);
-    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
-        setSettings(getSiteSettings());
-        setPages(getPublishedPages());
+        const loadSettings = async () => {
+            setSettings(getSiteSettings());
+
+            // Get local pages first
+            const localPages = getPublishedPages();
+
+            // Try to fetch Notion pages (copied logic from Header)
+            try {
+                const response = await fetch('/api/notion/content');
+                const data = await response.json();
+
+                if (data.pages && data.pages.length > 0) {
+                    const notionPages: Page[] = data.pages
+                        .filter((p: any) => p.status === 'published')
+                        .map((page: any) => ({
+                            id: page.notionId,
+                            slug: page.slug,
+                            title: page.title,
+                            content: page.content || '',
+                            published: true,
+                            status: 'published',
+                            createdAt: page.publishedAt || new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                            notionId: page.notionId,
+                        }));
+
+                    const notionSlugs = new Set(notionPages.map(p => p.slug));
+                    const uniqueLocalPages = localPages.filter(p => !notionSlugs.has(p.slug));
+                    setPages([...notionPages, ...uniqueLocalPages]);
+                } else {
+                    setPages(localPages);
+                }
+            } catch (error) {
+                console.error('Error fetching Notion pages:', error);
+                setPages(localPages);
+            }
+        };
+        loadSettings();
+
+        window.addEventListener('site-settings-updated', loadSettings);
+        return () => window.removeEventListener('site-settings-updated', loadSettings);
     }, []);
-
-    // Close menu on escape key
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setMenuOpen(false);
-        };
-        if (menuOpen) {
-            document.addEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = '';
-        };
-    }, [menuOpen]);
 
     if (isLoading) {
         return (
@@ -60,10 +87,16 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
     const latestPost = posts[0];
     const archivePosts = posts.slice(1, 6);
 
-    // Navigation items (pages only, not Home)
-    const navItems = pages.map((page) => ({ name: page.title, href: `/${page.slug}` }));
-    const showMenuButton = navItems.length > 4;
-    const visibleNavItems = showMenuButton ? [] : navItems;
+    // Navigation items (Pages + RSS)
+    const navItems = [
+        ...pages.map((page) => ({ name: page.title, href: `/${page.slug}` })),
+        ...(settings?.showRssFeed ? [{ name: 'RSS', href: '/feed.xml' }] : []),
+    ];
+
+    // Limit visible items to 3, rest go to overflow menu
+    const MAX_VISIBLE_ITEMS = 3;
+    const visibleNavItems = navItems.slice(0, MAX_VISIBLE_ITEMS);
+    const overflowNavItems = navItems.slice(MAX_VISIBLE_ITEMS);
 
     return (
         <div className="min-h-screen">
@@ -73,7 +106,6 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                     {settings?.title || 'ezBlog'}
                 </Link>
                 <nav className="flex items-center gap-6">
-                    {/* Show nav items inline if 4 or fewer */}
                     {visibleNavItems.map((item) => (
                         <Link
                             key={item.href}
@@ -84,63 +116,28 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                         </Link>
                     ))}
 
-                    {/* Show Menu button if more than 4 items */}
-                    {showMenuButton && (
-                        <button
-                            onClick={() => setMenuOpen(true)}
-                            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            Menu
-                        </button>
+                    {/* Overflow Dropdown */}
+                    {overflowNavItems.length > 0 && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
+                                    More
+                                    <ChevronDown className="h-4 w-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {overflowNavItems.map((item) => (
+                                    <DropdownMenuItem key={item.href} asChild>
+                                        <Link href={item.href}>{item.name}</Link>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
 
                     <ThemeToggle />
                 </nav>
             </header>
-
-            {/* Full-page Menu Overlay */}
-            {menuOpen && (
-                <div className="fixed inset-0 z-50 bg-background">
-                    <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-8">
-                        <Link
-                            href="/"
-                            className="text-lg font-medium tracking-tight hover:opacity-70"
-                            onClick={() => setMenuOpen(false)}
-                        >
-                            {settings?.title || 'ezBlog'}
-                        </Link>
-                        <button
-                            onClick={() => setMenuOpen(false)}
-                            className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                            aria-label="Close menu"
-                        >
-                            Close
-                            <X className="h-4 w-4" />
-                        </button>
-                    </div>
-                    <nav className="mx-auto max-w-2xl px-6">
-                        <div className="space-y-1">
-                            <Link
-                                href="/"
-                                className="block border-b border-border/40 py-4 text-2xl font-medium transition-colors hover:text-primary"
-                                onClick={() => setMenuOpen(false)}
-                            >
-                                Home
-                            </Link>
-                            {navItems.map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="block border-b border-border/40 py-4 text-2xl font-medium transition-colors hover:text-primary"
-                                    onClick={() => setMenuOpen(false)}
-                                >
-                                    {item.name}
-                                </Link>
-                            ))}
-                        </div>
-                    </nav>
-                </div>
-            )}
 
             {/* Main Content */}
             <main className="mx-auto max-w-2xl px-6 pb-24">
@@ -267,13 +264,6 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                     </section>
                 )}
             </main>
-
-            {/* Footer */}
-            <footer className="mx-auto max-w-2xl border-t border-border/40 px-6 py-8">
-                <p className="text-sm text-muted-foreground">
-                    {settings?.title || 'ezBlog'} © {new Date().getFullYear()}
-                </p>
-            </footer>
         </div>
     );
 }

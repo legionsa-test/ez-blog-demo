@@ -234,7 +234,15 @@ function blocksToHtml(recordMap: any, blockId: string): string {
             case 'gist': {
                 const source = properties?.source?.[0]?.[0] || format?.display_source;
                 if (source) {
-                    html += `<div class="aspect-video w-full my-4"><iframe src="${source}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
+                    let embedSrc = source;
+                    // Handle Figma specifically
+                    if (source.includes('figma.com/file') || source.includes('figma.com/proto') || source.includes('figma.com/design')) {
+                        if (!source.includes('embed_host')) {
+                            embedSrc = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
+                        }
+                    }
+
+                    html += `<div class="aspect-video w-full my-4"><iframe src="${embedSrc}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
                 }
                 break;
             }
@@ -438,7 +446,15 @@ export async function POST(request: NextRequest) {
                             content,
                             coverImage: props['hero image'] || props['heroimage'] || props['hero_image'] || props.cover || props.image || '',
                             coverImageSize: (() => {
-                                const heroSizeValue = String(props['hero size'] || props['herosize'] || props['hero_size'] || '').toLowerCase();
+                                // Try various casing for 'Hero Size'
+                                const heroSizeValue = String(
+                                    props['hero size'] ||
+                                    props['Hero Size'] ||
+                                    props['herosize'] ||
+                                    props['hero_size'] ||
+                                    props['HeroSize'] ||
+                                    ''
+                                ).toLowerCase();
                                 return heroSizeValue === 'big' ? 'big' : heroSizeValue === 'small' ? 'small' : undefined;
                             })(),
                             tags: props.tags || [],
