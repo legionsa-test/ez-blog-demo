@@ -14,7 +14,6 @@ import { TableOfContents } from '@/components/table-of-contents';
 import { ReadingProgress } from '@/components/reading-progress';
 import { ShareButtons } from '@/components/share-buttons';
 import { ImageLightbox, useLightbox } from '@/components/image-lightbox';
-import { Footer } from '@/components/layout/footer';
 import { getPostBySlug, getPublishedPosts } from '@/lib/storage';
 import { incrementViewCount, getViewCount, updateReadingHistory } from '@/lib/analytics';
 import { generatePostJsonLd, generateBreadcrumbJsonLd } from '@/lib/json-ld';
@@ -342,7 +341,6 @@ export default function BlogPostPage() {
                     </section>
                 )}
             </article>
-            <Footer />
 
             {/* Image Lightbox */}
             {lightboxImage && (
