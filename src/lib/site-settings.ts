@@ -51,11 +51,30 @@ export function getUnsplashApiKey(): string {
     return settings.unsplashApiKey || process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || '';
 }
 
-// Get admin password (from settings or falls back to env variable)
+// Get admin password
+// Priority: 1. Environment variable (secure, server-controlled)
+//          2. localStorage (local development only)
+//          3. Default fallback
 export function getAdminPassword(): string {
-    if (typeof window === 'undefined') {
-        return process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
+    // Environment variable takes priority (secure for production)
+    const envPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    if (envPassword) {
+        return envPassword;
     }
-    const settings = getSiteSettings();
-    return settings.adminPassword || process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
+
+    // Fall back to localStorage (for local development)
+    if (typeof window !== 'undefined') {
+        const settings = getSiteSettings();
+        if (settings.adminPassword) {
+            return settings.adminPassword;
+        }
+    }
+
+    // Default password (only if nothing else is set)
+    return 'admin123';
+}
+
+// Check if password is set via environment variable
+export function isPasswordFromEnv(): boolean {
+    return !!process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 }

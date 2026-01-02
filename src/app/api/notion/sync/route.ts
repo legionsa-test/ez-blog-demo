@@ -322,7 +322,7 @@ export async function POST(request: NextRequest) {
                             slug,
                             excerpt: props.summary || props.excerpt || props.description || '',
                             content,
-                            coverImage: props.cover || props.image || '',
+                            coverImage: props['hero image'] || props['heroimage'] || props['hero_image'] || props.cover || props.image || '',
                             tags: props.tags || [],
                             status: (props.status === 'Published' || props.published === true) ? 'published' : 'draft',
                             publishedAt: props.date || props.published_date || null,

@@ -109,8 +109,14 @@ function LoginForm() {
     }, []);
 
     // Redirect if already authenticated
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            router.push('/admin');
+        }
+    }, [isLoading, isAuthenticated, router]);
+
+    // Show nothing while redirecting
     if (!isLoading && isAuthenticated) {
-        router.push('/admin');
         return null;
     }
 
@@ -280,7 +286,7 @@ function LoginForm() {
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-4">
+                    <CardFooter className="flex flex-col gap-4 pt-4">
                         <Button
                             type="submit"
                             className="w-full"

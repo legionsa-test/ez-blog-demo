@@ -488,83 +488,106 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle>Security</CardTitle>
                     <CardDescription>
-                        Change your admin password. Leave blank to keep the current password.
+                        Manage your admin password and authentication settings.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="new-password">New Password</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="new-password"
-                                type={showNewPassword ? 'text' : 'password'}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Enter new password"
-                            />
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                            >
-                                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
+                    {process.env.NEXT_PUBLIC_ADMIN_PASSWORD ? (
+                        <div className="rounded-lg border border-green-500/50 bg-green-500/10 p-4">
+                            <p className="font-medium text-green-700 dark:text-green-400">
+                                ✓ Password secured via environment variable
+                            </p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Your admin password is set in your deployment environment (Vercel/Netlify).
+                                To change it, update the <code className="rounded bg-muted px-1">NEXT_PUBLIC_ADMIN_PASSWORD</code> environment variable.
+                            </p>
                         </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
-                        <Input
-                            id="confirm-password"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Confirm new password"
-                        />
-                    </div>
-                    {siteSettings.adminPassword && (
-                        <p className="text-xs text-muted-foreground">
-                            A custom password is currently set.
-                        </p>
+                    ) : (
+                        <>
+                            <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4">
+                                <p className="font-medium text-yellow-700 dark:text-yellow-400">
+                                    ⚠ Local password mode
+                                </p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Password is stored in this browser only. For production deployments, set
+                                    the <code className="rounded bg-muted px-1">NEXT_PUBLIC_ADMIN_PASSWORD</code> environment variable.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="new-password">New Password</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="new-password"
+                                        type={showNewPassword ? 'text' : 'password'}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="Enter new password"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="confirm-password">Confirm Password</Label>
+                                <Input
+                                    id="confirm-password"
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    placeholder="Confirm new password"
+                                />
+                            </div>
+                            {siteSettings.adminPassword && (
+                                <p className="text-xs text-muted-foreground">
+                                    A custom password is currently set.
+                                </p>
+                            )}
+                            {!siteSettings.adminPassword && (
+                                <p className="text-xs text-muted-foreground">
+                                    Using default password. Set a custom password for better security.
+                                </p>
+                            )}
+                            <Button
+                                onClick={() => {
+                                    if (!newPassword) {
+                                        toast.error('Please enter a new password');
+                                        return;
+                                    }
+                                    if (newPassword !== confirmPassword) {
+                                        toast.error('Passwords do not match');
+                                        return;
+                                    }
+                                    if (newPassword.length < 6) {
+                                        toast.error('Password must be at least 6 characters');
+                                        return;
+                                    }
+                                    setIsSavingPassword(true);
+                                    try {
+                                        saveSiteSettings({ adminPassword: newPassword });
+                                        setSiteSettings({ ...siteSettings, adminPassword: newPassword });
+                                        setNewPassword('');
+                                        setConfirmPassword('');
+                                        toast.success('Password updated! You may need to log in again.');
+                                    } catch (error) {
+                                        toast.error('Failed to update password');
+                                        console.error(error);
+                                    } finally {
+                                        setIsSavingPassword(false);
+                                    }
+                                }}
+                                disabled={isSavingPassword || !newPassword}
+                            >
+                                <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+                                {isSavingPassword ? 'Updating...' : 'Update Password'}
+                            </Button>
+                        </>
                     )}
-                    {!siteSettings.adminPassword && (
-                        <p className="text-xs text-muted-foreground">
-                            Using default password. Set a custom password for better security.
-                        </p>
-                    )}
-                    <Button
-                        onClick={() => {
-                            if (!newPassword) {
-                                toast.error('Please enter a new password');
-                                return;
-                            }
-                            if (newPassword !== confirmPassword) {
-                                toast.error('Passwords do not match');
-                                return;
-                            }
-                            if (newPassword.length < 6) {
-                                toast.error('Password must be at least 6 characters');
-                                return;
-                            }
-                            setIsSavingPassword(true);
-                            try {
-                                saveSiteSettings({ adminPassword: newPassword });
-                                setSiteSettings({ ...siteSettings, adminPassword: newPassword });
-                                setNewPassword('');
-                                setConfirmPassword('');
-                                toast.success('Password updated! You may need to log in again.');
-                            } catch (error) {
-                                toast.error('Failed to update password');
-                                console.error(error);
-                            } finally {
-                                setIsSavingPassword(false);
-                            }
-                        }}
-                        disabled={isSavingPassword || !newPassword}
-                    >
-                        <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-                        {isSavingPassword ? 'Updating...' : 'Update Password'}
-                    </Button>
                 </CardContent>
             </Card>
 
@@ -610,10 +633,10 @@ export default function SettingsPage() {
                         {isSaving ? 'Saving...' : 'Save Author Profile'}
                     </Button>
                 </CardContent>
-            </Card>
+            </Card >
 
             {/* Data Management */}
-            <Card>
+            < Card >
                 <CardHeader>
                     <CardTitle>Data Management</CardTitle>
                     <CardDescription>
@@ -647,10 +670,10 @@ export default function SettingsPage() {
                         </Button>
                     </div>
                 </CardContent>
-            </Card>
+            </Card >
 
             {/* Clear Data Dialog */}
-            <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+            < Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen} >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Clear All Data</DialogTitle>
@@ -668,7 +691,7 @@ export default function SettingsPage() {
                         </Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
         </div >
     );
 }

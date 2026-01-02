@@ -8,6 +8,8 @@ ezBlog is a modern, local-first blog CMS that combines the simplicity of a flatf
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
+🔗 **[Live Demo](https://ez-blog-demo.vercel.app/)** | 📖 [Documentation](#-how-to-use) | 🚀 [Quick Start](#-quick-start)
+
 ---
 
 ## 🎯 Why ezBlog?
@@ -47,23 +49,36 @@ ezBlog is built for speed:
 
 ---
 
-## 🔒 Security Score: 83/100
+## 🔒 Security
 
-ezBlog takes security seriously:
+ezBlog uses **environment variable-based authentication** for production deployments.
+
+### Setting Your Admin Password
+
+**For Production (Vercel/Netlify):**
+
+1. Go to your deployment platform (Vercel Dashboard)
+2. Navigate to **Settings → Environment Variables**
+3. Add a new variable:
+   - **Name:** `NEXT_PUBLIC_ADMIN_PASSWORD`
+   - **Value:** Your secure password
+4. Redeploy your site
+
+> ⚠️ **Important:** Without this environment variable, anyone can log in with the default password!
+
+**For Local Development:**
+
+You can set a password in Admin → Settings → Security. This is stored in your browser's localStorage and only works on that browser.
+
+### Security Features
 
 | Feature | Status |
 |---------|--------|
+| **Environment Variable Auth** | ✅ Server-controlled password |
 | **Brute-force Protection** | ✅ 5 attempts, 15 min lockout |
 | **Server-side Rate Limiting** | ✅ IP-based tracking |
 | **XSS Protection** | ✅ Content sanitization |
 | **SSRF Protection** | ✅ Domain validation for Notion |
-| **Authentication** | ✅ Cookie-based with expiry |
-
-### Security Features:
-- **Dual-layer rate limiting** — Server + client protection
-- **Notion content sanitization** — Prevents XSS from imported content
-- **Admin authentication** — Required for all CMS operations
-- **No sensitive data exposure** — All secrets stay server-side
 
 ---
 
@@ -110,10 +125,10 @@ npm run dev
 
 ### First-Time Setup
 
-1. **Open your blog** at `https://your-site.vercel.app`
-2. **Go to Admin** at `https://your-site.vercel.app/login`
-3. **Default password:** `admin123`
-4. **Change your password** in Admin → Settings → Security
+1. **Set your admin password** — Add `NEXT_PUBLIC_ADMIN_PASSWORD` in Vercel Environment Variables
+2. **Open your blog** at `https://your-site.vercel.app`
+3. **Go to Admin** at `https://your-site.vercel.app/login`
+4. **Login** with your password (default: `admin123` if env variable not set)
 
 ### Creating Posts
 
