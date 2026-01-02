@@ -76,7 +76,7 @@ ezBlog takes security seriously:
 3. **Import your forked repository**
 4. **Deploy** — That's it!
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/ezBlog)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/legionsa/ezBlog)
 
 ### Option 2: Deploy to Netlify
 
@@ -92,7 +92,7 @@ ezBlog takes security seriously:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/ezBlog.git
+git clone https://github.com/legionsa/ezBlog.git
 cd ezBlog
 
 # Install dependencies
