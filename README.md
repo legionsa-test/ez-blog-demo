@@ -1,6 +1,6 @@
 # ✍️ ezBlog
 
-**A Hybrid Flatfile Blog CMS — Built for Designers, Not Developers**
+**A Hybrid Flatfile Blog CMS — Built for Designers, Might be a Developers too**
 
 ezBlog is a modern, local-first blog CMS that combines the simplicity of a flatfile system with the power of Notion integration. Write your blog posts in a beautiful visual editor or sync them directly from your Notion workspace. No database required. No complex setup. Just deploy and start writing.
 
