@@ -118,39 +118,96 @@ function LoginForm() {
         e.preventDefault();
         setError('');
 
-        // Check if locked out
-        const data = getRateLimitData();
+        // Check client-side lockout first (for UI feedback)
+        const clientData = getRateLimitData();
         const now = Date.now();
 
-        if (data.lockoutUntil && now < data.lockoutUntil) {
+        if (clientData.lockoutUntil && now < clientData.lockoutUntil) {
             setError('Too many failed attempts. Please wait before trying again.');
             return;
         }
 
         setIsSubmitting(true);
 
-        if (login(password)) {
-            // Success - clear rate limit data
-            clearRateLimitData();
-            router.push('/admin');
-        } else {
-            // Failed attempt
-            const newAttempts = data.attempts + 1;
-            const newData: RateLimitData = {
-                attempts: newAttempts,
-                lockoutUntil: newAttempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null,
-                lastAttempt: now,
-            };
-            saveRateLimitData(newData);
+        try {
+            // Check server-side rate limit first
+            const rateLimitResponse = await fetch('/api/auth/rate-limit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: '***' }), // Don't send actual password, just trigger check
+            });
 
-            if (newAttempts >= MAX_ATTEMPTS) {
-                setIsLocked(true);
-                setLockoutTimeRemaining(LOCKOUT_DURATION);
-                setError(`Too many failed attempts. Account locked for ${Math.floor(LOCKOUT_DURATION / 60000)} minutes.`);
+            const rateLimitData = await rateLimitResponse.json();
+
+            if (!rateLimitResponse.ok) {
+                // Server-side rate limit triggered
+                if (rateLimitData.locked) {
+                    setIsLocked(true);
+                    setLockoutTimeRemaining(rateLimitData.lockoutRemaining || LOCKOUT_DURATION);
+                    // Sync with client-side storage
+                    saveRateLimitData({
+                        attempts: MAX_ATTEMPTS,
+                        lockoutUntil: now + (rateLimitData.lockoutRemaining || LOCKOUT_DURATION),
+                        lastAttempt: now,
+                    });
+                }
+                setError(rateLimitData.error || 'Too many attempts. Please try again later.');
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Server-side rate limit passed, now check password
+            if (login(password)) {
+                // Success - clear both client and server rate limits
+                clearRateLimitData();
+                await fetch('/api/auth/rate-limit', { method: 'DELETE' });
+                router.push('/admin');
             } else {
-                const remaining = MAX_ATTEMPTS - newAttempts;
-                setAttemptsRemaining(remaining);
-                setError(`Invalid password. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`);
+                // Failed attempt - update client-side tracking
+                const newAttempts = clientData.attempts + 1;
+                const serverAttemptsRemaining = rateLimitData.attemptsRemaining ?? (MAX_ATTEMPTS - newAttempts);
+
+                const newData: RateLimitData = {
+                    attempts: newAttempts,
+                    lockoutUntil: serverAttemptsRemaining <= 0 ? now + LOCKOUT_DURATION : null,
+                    lastAttempt: now,
+                };
+                saveRateLimitData(newData);
+
+                if (serverAttemptsRemaining <= 0) {
+                    setIsLocked(true);
+                    setLockoutTimeRemaining(LOCKOUT_DURATION);
+                    setError(`Too many failed attempts. Account locked for ${Math.floor(LOCKOUT_DURATION / 60000)} minutes.`);
+                } else {
+                    setAttemptsRemaining(serverAttemptsRemaining);
+                    setError(`Invalid password. ${serverAttemptsRemaining} attempt${serverAttemptsRemaining !== 1 ? 's' : ''} remaining.`);
+                }
+            }
+        } catch (err) {
+            // Network error - fall back to client-side only
+            console.error('Rate limit API error:', err);
+
+            if (login(password)) {
+                clearRateLimitData();
+                router.push('/admin');
+            } else {
+                const newAttempts = clientData.attempts + 1;
+                const newData: RateLimitData = {
+                    attempts: newAttempts,
+                    lockoutUntil: newAttempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null,
+                    lastAttempt: now,
+                };
+                saveRateLimitData(newData);
+
+                if (newAttempts >= MAX_ATTEMPTS) {
+                    setIsLocked(true);
+                    setLockoutTimeRemaining(LOCKOUT_DURATION);
+                    setError(`Too many failed attempts. Account locked for ${Math.floor(LOCKOUT_DURATION / 60000)} minutes.`);
+                } else {
+                    const remaining = MAX_ATTEMPTS - newAttempts;
+                    setAttemptsRemaining(remaining);
+                    setError(`Invalid password. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`);
+                }
             }
         }
 
