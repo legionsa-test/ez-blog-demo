@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Save, Download, Upload, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Save, Download, Upload, Trash2, Eye, EyeOff, RefreshCw, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { EmojiPicker } from '@/components/emoji-picker';
-import { exportPosts, importPosts, getPosts, saveAuthor as saveAuthorToStorage } from '@/lib/storage';
+import { exportPosts, importPosts, getPosts, savePost, saveAuthor as saveAuthorToStorage } from '@/lib/storage';
 import { getSiteSettings, saveSiteSettings } from '@/lib/site-settings';
 import { getPrimaryAuthor, saveAuthor } from '@/lib/authors';
 import { Author, SiteSettings } from '@/lib/types';
@@ -47,6 +47,8 @@ export default function SettingsPage() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [isSyncingNotion, setIsSyncingNotion] = useState(false);
+    const [notionSyncResult, setNotionSyncResult] = useState<{ count: number; type: string } | null>(null);
 
     useEffect(() => {
         const currentAuthor = getPrimaryAuthor();
@@ -120,6 +122,87 @@ export default function SettingsPage() {
         toast.success('All data cleared!');
         setClearDialogOpen(false);
         window.location.reload();
+    };
+
+    const handleNotionSync = async () => {
+        if (!siteSettings.notionPageUrl) {
+            toast.error('Please enter a Notion page URL first');
+            return;
+        }
+
+        setIsSyncingNotion(true);
+        setNotionSyncResult(null);
+
+        try {
+            const response = await fetch('/api/notion/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pageUrl: siteSettings.notionPageUrl }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Sync failed');
+            }
+
+            const author = getPrimaryAuthor();
+            let importedCount = 0;
+
+            for (const post of data.posts) {
+                // Check if post already exists (by notionId)
+                const existingPosts = getPosts();
+                const existing = existingPosts.find(p => p.notionId === post.notionId);
+
+                if (existing) {
+                    // Update existing post
+                    savePost({
+                        ...existing,
+                        title: post.title,
+                        slug: post.slug,
+                        excerpt: post.excerpt,
+                        content: post.content,
+                        coverImage: post.coverImage || existing.coverImage,
+                        tags: post.tags,
+                        status: post.status,
+                        publishedAt: post.publishedAt || existing.publishedAt,
+                        source: 'notion' as const,
+                    });
+                } else {
+                    // Create new post
+                    savePost({
+                        title: post.title,
+                        slug: post.slug,
+                        excerpt: post.excerpt,
+                        content: post.content,
+                        coverImage: post.coverImage || '',
+                        tags: post.tags,
+                        status: post.status,
+                        publishedAt: post.publishedAt,
+                        author,
+                        notionId: post.notionId,
+                        source: 'notion' as const,
+                    });
+                    importedCount++;
+                }
+            }
+
+            setNotionSyncResult({ count: data.posts.length, type: data.type });
+            toast.success(`Synced ${data.posts.length} post(s) from Notion!`);
+        } catch (error: any) {
+            console.error('Notion sync error:', error);
+            toast.error(error.message || 'Failed to sync from Notion');
+        } finally {
+            setIsSyncingNotion(false);
+        }
+    };
+
+    const handleRemoveNotionPosts = () => {
+        const posts = getPosts();
+        const localPosts = posts.filter(p => p.source !== 'notion');
+        localStorage.setItem('ezblog_posts', JSON.stringify(localPosts));
+        toast.success('Removed all Notion posts');
+        setNotionSyncResult(null);
     };
 
     const postsCount = getPosts().length;
@@ -261,6 +344,75 @@ export default function SettingsPage() {
                             </button>
                         ))}
                     </div>
+                </CardContent>
+            </Card>
+
+            {/* Notion Integration */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Link2 className="h-5 w-5" />
+                        Notion Integration
+                    </CardTitle>
+                    <CardDescription>
+                        Import posts from a public Notion database. Similar to Nobelium.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between space-x-2">
+                        <Label htmlFor="enable-notion">Enable Notion Sync</Label>
+                        <Switch
+                            id="enable-notion"
+                            checked={siteSettings.enableNotionSync === true}
+                            onCheckedChange={(checked) => {
+                                setSiteSettings({ ...siteSettings, enableNotionSync: checked });
+                                saveSiteSettings({ enableNotionSync: checked });
+                                if (!checked) {
+                                    handleRemoveNotionPosts();
+                                }
+                            }}
+                        />
+                    </div>
+                    {siteSettings.enableNotionSync && (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="notion-url">Notion Page URL</Label>
+                                <Input
+                                    id="notion-url"
+                                    value={siteSettings.notionPageUrl || ''}
+                                    onChange={(e) => setSiteSettings({ ...siteSettings, notionPageUrl: e.target.value })}
+                                    placeholder="https://www.notion.so/your-page-id"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Paste the URL of your public Notion page or database.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    onClick={handleNotionSync}
+                                    disabled={isSyncingNotion || !siteSettings.notionPageUrl}
+                                >
+                                    <RefreshCw className={`mr-2 h-4 w-4 ${isSyncingNotion ? 'animate-spin' : ''}`} />
+                                    {isSyncingNotion ? 'Syncing...' : 'Sync Now'}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        saveSiteSettings({ notionPageUrl: siteSettings.notionPageUrl });
+                                        toast.success('Notion URL saved!');
+                                    }}
+                                >
+                                    <Save className="mr-2 h-4 w-4" />
+                                    Save URL
+                                </Button>
+                            </div>
+                            {notionSyncResult && (
+                                <p className="text-sm text-muted-foreground">
+                                    Last sync: {notionSyncResult.count} post(s) from {notionSyncResult.type}
+                                </p>
+                            )}
+                        </>
+                    )}
                 </CardContent>
             </Card>
 

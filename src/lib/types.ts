@@ -16,6 +16,8 @@ export interface Post {
   updatedAt: string;
   publishedAt: string | null;
   readingTime: number;
+  source?: 'local' | 'notion';
+  notionId?: string;
 }
 
 export interface Author {
@@ -74,6 +76,8 @@ export interface SiteSettings {
   footerText?: string;
   theme?: 'ezblog1' | 'atavist' | 'supersimple';
   welcomeText?: string;
+  notionPageUrl?: string;
+  enableNotionSync?: boolean;
 }
 
 export interface Page {
