@@ -141,10 +141,17 @@ function extractDatabaseRows(recordMap: any): any[] {
                     row.properties.title = extractText(value);
                     break;
                 case 'text':
+                case 'rich_text':
                     row.properties[propName] = extractText(value);
                     break;
-                case 'multi_select':
                 case 'select':
+                    // Select returns single value as string
+                    if (value && value[0]) {
+                        row.properties[propName] = value[0][0] || '';
+                    }
+                    break;
+                case 'multi_select':
+                    // Multi-select returns array
                     if (value && value[0]) {
                         row.properties[propName] = value[0][0]?.split(',').map((t: string) => t.trim()) || [];
                     }
@@ -223,22 +230,50 @@ async function fetchNotionContent(pageUrl: string) {
                 const content = blocksToHtml(pageRecordMap, row.id);
 
                 const props = row.properties;
-                const title = props.title || 'Untitled';
-                const slug = props.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-                const typeValue = (props.type?.[0] || props.contenttype?.[0] || 'post').toLowerCase();
+                // Title: already extracted as 'title' from title type
+                const title = props.title || 'Untitled';
+
+                // Slug: check multiple possible column names
+                const slug = props.slug || props.url || props.permalink ||
+                    title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+                // Type: check for 'type' or 'contenttype' property
+                const typeValue = String(props.type || props.contenttype || props['content type'] || 'post').toLowerCase();
                 const contentType = typeValue === 'page' ? 'page' : 'post';
+
+                // Status: check for 'published' in status field (case-insensitive)
+                const statusValue = String(props.status || '').toLowerCase();
+                const isPublished = statusValue === 'published' || props.published === true;
+
+                // Excerpt/Summary: check multiple possible column names
+                const excerpt = props.summary || props.excerpt || props.description ||
+                    props.subtitle || props.intro || '';
+
+                // Tags: ensure it's an array
+                let tags = props.tags || props.categories || props.labels || [];
+                if (typeof tags === 'string') {
+                    tags = tags.split(',').map((t: string) => t.trim()).filter(Boolean);
+                }
+
+                // Date: check multiple possible column names
+                const publishedAt = props.date || props.published_date || props.publishedat ||
+                    props['publish date'] || props.created || null;
+
+                // Cover Image: check multiple possible column names
+                const coverImage = props['hero image'] || props['heroimage'] || props['hero_image'] ||
+                    props.cover || props.image || props.thumbnail || props.banner || '';
 
                 return {
                     notionId: row.id,
                     title,
                     slug,
-                    excerpt: props.summary || props.excerpt || props.description || '',
+                    excerpt,
                     content,
-                    coverImage: props['hero image'] || props['heroimage'] || props['hero_image'] || props.cover || props.image || '',
-                    tags: props.tags || [],
-                    status: (props.status === 'Published' || props.published === true) ? 'published' : 'draft',
-                    publishedAt: props.date || props.published_date || null,
+                    coverImage,
+                    tags,
+                    status: isPublished ? 'published' : 'draft',
+                    publishedAt,
                     contentType,
                 };
             } catch (e) {

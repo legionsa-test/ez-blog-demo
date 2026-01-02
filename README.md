@@ -82,17 +82,18 @@ All settings use **environment variables**. Set in Vercel → Redeploy.
 
 ### 1. Create Database
 
-Create a Notion database with these columns:
+Create a Notion database with these columns (aliases supported):
 
-| Property | Type | Values |
-|----------|------|--------|
-| `Title` | Title | Post title |
-| `Slug` | Text | URL slug |
-| `Status` | Select | `Published`, `Draft` |
-| `Type` | Select | `Post`, `Page` |
-| `Tags` | Multi-select | Tag names |
-| `Hero Image` | URL | Cover image URL |
-| `Date` | Date | Publish date |
+| Property | Type | Aliases | Values |
+|----------|------|---------|--------|
+| `Title` | Title | — | Post title |
+| `Slug` | Text | `slug`, `url`, `permalink` | URL slug |
+| `Status` | Select | `status` | `Published`, `Draft` |
+| `Type` | Select | `type`, `contenttype`, `content type` | `Post`, `Page` |
+| `Tags` | Multi-select | `tags`, `categories`, `labels` | Tag names |
+| `Summary` | Text | `summary`, `excerpt`, `description`, `subtitle`, `intro` | Short description |
+| `Hero Image` | URL | `hero image`, `cover`, `image`, `thumbnail`, `banner` | Cover image URL |
+| `Date` | Date | `date`, `published_date`, `publish date`, `created` | Publish date |
 
 ### 2. Make Public
 

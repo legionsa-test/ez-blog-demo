@@ -173,8 +173,13 @@ export function importPosts(json: string): boolean {
     }
 }
 
-// Initialize with sample post if empty
+// Initialize with sample post if empty (skip if Notion is configured)
 export function initializeSamplePosts(): void {
+    // Skip sample posts if Notion URL is configured
+    if (process.env.NEXT_PUBLIC_NOTION_PAGE_URL) {
+        return;
+    }
+
     const posts = getPosts();
     if (posts.length === 0) {
         const samplePost = {
