@@ -1,14 +1,59 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PenLine, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { PenLine, Eye, EyeOff, AlertCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth, AuthProvider } from '@/lib/auth';
+
+// Rate limiting constants
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes in ms
+const RATE_LIMIT_KEY = 'ezblog_login_attempts';
+
+interface RateLimitData {
+    attempts: number;
+    lockoutUntil: number | null;
+    lastAttempt: number;
+}
+
+function getRateLimitData(): RateLimitData {
+    if (typeof window === 'undefined') {
+        return { attempts: 0, lockoutUntil: null, lastAttempt: 0 };
+    }
+    try {
+        const data = localStorage.getItem(RATE_LIMIT_KEY);
+        if (data) {
+            return JSON.parse(data);
+        }
+    } catch {
+        // Ignore parse errors
+    }
+    return { attempts: 0, lockoutUntil: null, lastAttempt: 0 };
+}
+
+function saveRateLimitData(data: RateLimitData): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
+}
+
+function clearRateLimitData(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(RATE_LIMIT_KEY);
+}
+
+function formatTimeRemaining(ms: number): string {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    if (minutes > 0) {
+        return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+}
 
 function LoginForm() {
     const router = useRouter();
@@ -17,6 +62,51 @@ function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
+    const [lockoutTimeRemaining, setLockoutTimeRemaining] = useState(0);
+    const [attemptsRemaining, setAttemptsRemaining] = useState(MAX_ATTEMPTS);
+
+    // Check lockout status on mount and update countdown
+    useEffect(() => {
+        const checkLockout = () => {
+            const data = getRateLimitData();
+            const now = Date.now();
+
+            if (data.lockoutUntil && now < data.lockoutUntil) {
+                setIsLocked(true);
+                setLockoutTimeRemaining(data.lockoutUntil - now);
+            } else if (data.lockoutUntil && now >= data.lockoutUntil) {
+                // Lockout expired, reset
+                clearRateLimitData();
+                setIsLocked(false);
+                setLockoutTimeRemaining(0);
+                setAttemptsRemaining(MAX_ATTEMPTS);
+            } else {
+                setIsLocked(false);
+                setAttemptsRemaining(MAX_ATTEMPTS - data.attempts);
+            }
+        };
+
+        checkLockout();
+
+        // Update countdown every second if locked
+        const interval = setInterval(() => {
+            const data = getRateLimitData();
+            const now = Date.now();
+
+            if (data.lockoutUntil && now < data.lockoutUntil) {
+                setIsLocked(true);
+                setLockoutTimeRemaining(data.lockoutUntil - now);
+            } else if (data.lockoutUntil) {
+                clearRateLimitData();
+                setIsLocked(false);
+                setLockoutTimeRemaining(0);
+                setAttemptsRemaining(MAX_ATTEMPTS);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Redirect if already authenticated
     if (!isLoading && isAuthenticated) {
@@ -27,12 +117,41 @@ function LoginForm() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
+
+        // Check if locked out
+        const data = getRateLimitData();
+        const now = Date.now();
+
+        if (data.lockoutUntil && now < data.lockoutUntil) {
+            setError('Too many failed attempts. Please wait before trying again.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         if (login(password)) {
+            // Success - clear rate limit data
+            clearRateLimitData();
             router.push('/admin');
         } else {
-            setError('Invalid password. Please try again.');
+            // Failed attempt
+            const newAttempts = data.attempts + 1;
+            const newData: RateLimitData = {
+                attempts: newAttempts,
+                lockoutUntil: newAttempts >= MAX_ATTEMPTS ? now + LOCKOUT_DURATION : null,
+                lastAttempt: now,
+            };
+            saveRateLimitData(newData);
+
+            if (newAttempts >= MAX_ATTEMPTS) {
+                setIsLocked(true);
+                setLockoutTimeRemaining(LOCKOUT_DURATION);
+                setError(`Too many failed attempts. Account locked for ${Math.floor(LOCKOUT_DURATION / 60000)} minutes.`);
+            } else {
+                const remaining = MAX_ATTEMPTS - newAttempts;
+                setAttemptsRemaining(remaining);
+                setError(`Invalid password. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`);
+            }
         }
 
         setIsSubmitting(false);
@@ -53,7 +172,18 @@ function LoginForm() {
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
-                        {error && (
+                        {isLocked && lockoutTimeRemaining > 0 && (
+                            <div
+                                className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+                                role="alert"
+                            >
+                                <Clock className="h-4 w-4" aria-hidden="true" />
+                                <span>
+                                    Account locked. Try again in {formatTimeRemaining(lockoutTimeRemaining)}
+                                </span>
+                            </div>
+                        )}
+                        {error && !isLocked && (
                             <div
                                 className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
                                 role="alert"
@@ -73,6 +203,7 @@ function LoginForm() {
                                     placeholder="Enter admin password"
                                     required
                                     autoComplete="current-password"
+                                    disabled={isLocked}
                                     aria-describedby={error ? 'password-error' : undefined}
                                 />
                                 <Button
@@ -93,12 +224,18 @@ function LoginForm() {
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">
-                        <Button type="submit" className="w-full" disabled={isSubmitting || isLoading}>
-                            {isSubmitting ? 'Signing in...' : 'Sign In'}
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isSubmitting || isLoading || isLocked}
+                        >
+                            {isSubmitting ? 'Signing in...' : isLocked ? 'Locked' : 'Sign In'}
                         </Button>
-                        <p className="text-center text-sm text-muted-foreground">
-                            Default password: <code className="rounded bg-muted px-1">admin123</code>
-                        </p>
+                        {!isLocked && attemptsRemaining < MAX_ATTEMPTS && attemptsRemaining > 0 && (
+                            <p className="text-center text-xs text-muted-foreground">
+                                {attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} remaining before lockout
+                            </p>
+                        )}
                     </CardFooter>
                 </form>
             </Card>
