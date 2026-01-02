@@ -18,6 +18,7 @@ export interface Post {
   readingTime: number;
   source?: 'local' | 'notion';
   notionId?: string;
+  order?: number;
 }
 
 export interface Author {
@@ -88,4 +89,5 @@ export interface Page {
   published: boolean;
   createdAt: string;
   updatedAt: string;
+  order?: number;
 }

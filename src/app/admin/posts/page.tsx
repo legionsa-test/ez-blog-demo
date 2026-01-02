@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Pencil, Trash2, Eye, MoreHorizontal, CheckSquare, Square, Send, Archive } from 'lucide-react';
+import { Plus, Trash2, MoreHorizontal, CheckSquare, Square, Send, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
     Card,
@@ -14,13 +13,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-    DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -29,10 +21,27 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getPosts, deletePost, savePost as updatePost } from '@/lib/storage';
+import { getPosts, deletePost, savePost as updatePost, updatePostsOrder } from '@/lib/storage';
 import { Post } from '@/lib/types';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
+
+// DnD Kit imports
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortablePostRow } from '@/components/admin/sortable-post-row';
 
 export default function PostsPage() {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -45,6 +54,18 @@ export default function PostsPage() {
     // Bulk selection state
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+    // DnD sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     useEffect(() => {
         loadPosts();
@@ -79,6 +100,49 @@ export default function PostsPage() {
     const confirmDelete = (post: Post) => {
         setPostToDelete(post);
         setDeleteDialogOpen(true);
+    };
+
+    // Drag end handler
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            const oldIndex = filteredPosts.findIndex((p) => p.id === active.id);
+            const newIndex = filteredPosts.findIndex((p) => p.id === over.id);
+
+            const newFilteredPosts = arrayMove(filteredPosts, oldIndex, newIndex);
+            setFilteredPosts(newFilteredPosts);
+
+            // If viewing all posts, update the full order
+            if (statusFilter === 'all') {
+                const orderedIds = newFilteredPosts.map((p) => p.id);
+                updatePostsOrder(orderedIds);
+                setPosts(newFilteredPosts);
+                toast.success('Post order updated');
+            } else {
+                // When filtered, we need to maintain relative order
+                // Merge the filtered order back into the full posts array
+                const allPosts = getPosts();
+                const filteredIds = new Set(filteredPosts.map(p => p.id));
+
+                // Build new order: filtered posts in new order, then rest
+                const orderedIds: string[] = [];
+                let filteredIndex = 0;
+
+                for (const post of allPosts) {
+                    if (filteredIds.has(post.id)) {
+                        orderedIds.push(newFilteredPosts[filteredIndex].id);
+                        filteredIndex++;
+                    } else {
+                        orderedIds.push(post.id);
+                    }
+                }
+
+                updatePostsOrder(orderedIds);
+                loadPosts();
+                toast.success('Post order updated');
+            }
+        }
     };
 
     // Bulk selection handlers
@@ -151,7 +215,7 @@ export default function PostsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Posts</h1>
-                    <p className="text-muted-foreground">Manage your blog content.</p>
+                    <p className="text-muted-foreground">Manage your blog content. Drag to reorder.</p>
                 </div>
                 <Button asChild>
                     <Link href="/admin/posts/new">
@@ -203,7 +267,7 @@ export default function PostsPage() {
                 )}
             </div>
 
-            {/* Posts List */}
+            {/* Posts List with Drag and Drop */}
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -241,77 +305,28 @@ export default function PostsPage() {
                             </Button>
                         </div>
                     ) : (
-                        <div className="divide-y divide-border">
-                            {filteredPosts.map((post) => (
-                                <div
-                                    key={post.id}
-                                    className={`flex items-center gap-4 py-4 first:pt-0 last:pb-0 transition-colors ${selectedIds.has(post.id) ? 'bg-muted/50 -mx-4 px-4 rounded' : ''
-                                        }`}
-                                >
-                                    {/* Checkbox */}
-                                    <Checkbox
-                                        checked={selectedIds.has(post.id)}
-                                        onCheckedChange={() => toggleSelect(post.id)}
-                                        aria-label={`Select ${post.title}`}
-                                    />
-
-                                    {/* Post Info */}
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-3">
-                                            <Link
-                                                href={`/admin/posts/${post.id}/edit`}
-                                                className="font-medium text-foreground hover:text-primary line-clamp-1"
-                                            >
-                                                {post.title || 'Untitled'}
-                                            </Link>
-                                            <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
-                                                {post.status}
-                                            </Badge>
-                                        </div>
-                                        <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
-                                            <span>Updated {format(new Date(post.updatedAt), 'MMM d, yyyy')}</span>
-                                            <span>{post.readingTime} min read</span>
-                                            {post.tags.length > 0 && (
-                                                <span>{post.tags.slice(0, 2).join(', ')}</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" aria-label="Post actions">
-                                                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem asChild>
-                                                <Link href={`/admin/posts/${post.id}/edit`}>
-                                                    <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
-                                                    Edit
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            {post.status === 'published' && (
-                                                <DropdownMenuItem asChild>
-                                                    <Link href={`/blog/${post.slug}`} target="_blank">
-                                                        <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
-                                                        View
-                                                    </Link>
-                                                </DropdownMenuItem>
-                                            )}
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                className="text-destructive focus:text-destructive"
-                                                onClick={() => confirmDelete(post)}
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                                                Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={filteredPosts.map((p) => p.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className="divide-y divide-border">
+                                    {filteredPosts.map((post) => (
+                                        <SortablePostRow
+                                            key={post.id}
+                                            post={post}
+                                            isSelected={selectedIds.has(post.id)}
+                                            onToggleSelect={toggleSelect}
+                                            onDelete={confirmDelete}
+                                        />
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </SortableContext>
+                        </DndContext>
                     )}
                 </CardContent>
             </Card>

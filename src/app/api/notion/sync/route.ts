@@ -45,8 +45,8 @@ function isValidNotionUrl(url: string): boolean {
 async function isAdminAuthenticated(): Promise<boolean> {
     try {
         const cookieStore = await cookies();
-        const authCookie = cookieStore.get('ezblog_admin_auth');
-        return authCookie?.value === 'authenticated';
+        const authCookie = cookieStore.get('ezblog_auth');
+        return authCookie?.value === 'true';
     } catch {
         return false;
     }

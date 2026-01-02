@@ -34,16 +34,41 @@ function calculateReadingTime(content: string): number {
     return Math.max(1, Math.ceil(words / 200));
 }
 
-// Get all posts from localStorage
+// Get all posts from localStorage (sorted by order)
 export function getPosts(): Post[] {
     if (typeof window === 'undefined') return [];
     const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const posts: Post[] = data ? JSON.parse(data) : [];
+    // Sort by order (ascending), then by createdAt (descending) for unordered posts
+    return posts.sort((a, b) => {
+        const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 }
 
-// Get published posts only
+// Get published posts only (sorted by order)
 export function getPublishedPosts(): Post[] {
     return getPosts().filter((post) => post.status === 'published');
+}
+
+// Update posts order
+export function updatePostsOrder(orderedIds: string[]): void {
+    if (typeof window === 'undefined') return;
+    const data = localStorage.getItem(STORAGE_KEY);
+    const posts: Post[] = data ? JSON.parse(data) : [];
+
+    // Assign order based on position in orderedIds array
+    const updatedPosts = posts.map((post) => {
+        const orderIndex = orderedIds.indexOf(post.id);
+        return {
+            ...post,
+            order: orderIndex !== -1 ? orderIndex : posts.length + 1000
+        };
+    });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPosts));
 }
 
 // Get a single post by slug

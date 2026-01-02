@@ -17,16 +17,41 @@ function generateSlug(title: string): string {
         .replace(/(^-|-$)/g, '');
 }
 
-// Get all pages
+// Get all pages (sorted by order)
 export function getPages(): Page[] {
     if (typeof window === 'undefined') return [];
     const data = localStorage.getItem(PAGES_KEY);
-    return data ? JSON.parse(data) : [];
+    const pages: Page[] = data ? JSON.parse(data) : [];
+    // Sort by order (ascending), then by createdAt (descending) for unordered pages
+    return pages.sort((a, b) => {
+        const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 }
 
-// Get published pages only
+// Get published pages only (sorted by order)
 export function getPublishedPages(): Page[] {
     return getPages().filter((page) => page.published);
+}
+
+// Update pages order
+export function updatePagesOrder(orderedIds: string[]): void {
+    if (typeof window === 'undefined') return;
+    const data = localStorage.getItem(PAGES_KEY);
+    const pages: Page[] = data ? JSON.parse(data) : [];
+
+    // Assign order based on position in orderedIds array
+    const updatedPages = pages.map((page) => {
+        const orderIndex = orderedIds.indexOf(page.id);
+        return {
+            ...page,
+            order: orderIndex !== -1 ? orderIndex : pages.length + 1000
+        };
+    });
+
+    localStorage.setItem(PAGES_KEY, JSON.stringify(updatedPages));
 }
 
 // Get page by slug
