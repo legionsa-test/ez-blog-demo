@@ -315,6 +315,3 @@ export async function GET() {
         );
     }
 }
-
-// Revalidation config for Next.js
-export const revalidate = REVALIDATE_SECONDS;
