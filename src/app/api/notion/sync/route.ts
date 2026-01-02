@@ -123,15 +123,16 @@ function blocksToHtml(recordMap: any, blockId: string): string {
                 break;
             case 'header':
             case 'heading_1':
-                html += `<h1>${extractText(properties.title)}</h1>`;
+                // Convert to h2 (h1 is reserved for page title, TOC uses h2/h3)
+                html += `<h2>${extractText(properties.title)}</h2>`;
                 break;
             case 'sub_header':
             case 'heading_2':
-                html += `<h2>${extractText(properties.title)}</h2>`;
+                html += `<h3>${extractText(properties.title)}</h3>`;
                 break;
             case 'sub_sub_header':
             case 'heading_3':
-                html += `<h3>${extractText(properties.title)}</h3>`;
+                html += `<h4>${extractText(properties.title)}</h4>`;
                 break;
             case 'bulleted_list':
                 html += `<ul><li>${extractText(properties.title)}</li></ul>`;
