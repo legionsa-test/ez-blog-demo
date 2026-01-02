@@ -58,6 +58,7 @@ All settings use **environment variables**. Set in Vercel → Redeploy.
 |----------|-------------|
 | `NEXT_PUBLIC_ADMIN_PASSWORD` | Admin login password |
 | `NEXT_PUBLIC_NOTION_PAGE_URL` | Your Notion database URL |
+| `NEXT_PUBLIC_SITE_URL` | Your site's full URL (e.g., `https://yourblog.com`) — used for RSS feed, sitemap, and SEO |
 
 ### Site Settings
 | Variable | Description | Default |

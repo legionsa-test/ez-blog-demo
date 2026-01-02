@@ -248,6 +248,15 @@ export default function SettingsPage() {
                                 </span>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                                <div>
+                                    <span className="text-muted-foreground">NEXT_PUBLIC_SITE_URL</span>
+                                    <span className="text-red-500 ml-2">*required for RSS</span>
+                                </div>
+                                <span className={`font-semibold ${process.env.NEXT_PUBLIC_SITE_URL ? 'text-green-600' : 'text-amber-500'}`}>
+                                    {process.env.NEXT_PUBLIC_SITE_URL || '⚠ Not set (using placeholder)'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
                                 <span className="text-muted-foreground">NEXT_PUBLIC_SITE_TITLE</span>
                                 <span className="text-primary font-semibold">{siteSettings.title}</span>
                             </div>
