@@ -88,7 +88,9 @@ export interface Page {
   title: string;
   content: string;
   published: boolean;
+  status?: 'published' | 'draft';
   createdAt: string;
   updatedAt: string;
   order?: number;
+  notionId?: string; // For Notion-synced pages
 }

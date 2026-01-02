@@ -18,25 +18,74 @@ const defaultSettings: SiteSettings = {
     showRssFeed: false,
 };
 
-// Get site settings
-export function getSiteSettings(): SiteSettings {
-    if (typeof window === 'undefined') return defaultSettings;
+// Get settings from localStorage (for local development fallback)
+function getLocalStorageSettings(): Partial<SiteSettings> {
+    if (typeof window === 'undefined') return {};
     const data = localStorage.getItem(SETTINGS_KEY);
-    if (!data) return defaultSettings;
-
+    if (!data) return {};
     try {
-        return { ...defaultSettings, ...JSON.parse(data) };
+        return JSON.parse(data);
     } catch {
-        return defaultSettings;
+        return {};
     }
 }
 
-// Save site settings
+// Get site settings with environment variable priority
+// Priority: 1. Environment variables (production)
+//          2. localStorage (local development)
+//          3. Default values
+export function getSiteSettings(): SiteSettings {
+    const localSettings = getLocalStorageSettings();
+
+    return {
+        // Title: env var > localStorage > default
+        title: process.env.NEXT_PUBLIC_SITE_TITLE || localSettings.title || defaultSettings.title,
+
+        // Icon: env var > localStorage > default
+        icon: process.env.NEXT_PUBLIC_SITE_ICON || localSettings.icon || defaultSettings.icon,
+
+        // Description: env var > localStorage > default
+        description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || localSettings.description || defaultSettings.description,
+
+        // Theme: env var > localStorage > default
+        theme: (process.env.NEXT_PUBLIC_THEME as SiteSettings['theme']) || localSettings.theme || defaultSettings.theme,
+
+        // Welcome text: env var > localStorage > default
+        welcomeText: process.env.NEXT_PUBLIC_WELCOME_TEXT || localSettings.welcomeText || defaultSettings.welcomeText,
+
+        // Footer visibility: env var > localStorage > default
+        showFooter: process.env.NEXT_PUBLIC_SHOW_FOOTER !== undefined
+            ? process.env.NEXT_PUBLIC_SHOW_FOOTER === 'true'
+            : localSettings.showFooter ?? defaultSettings.showFooter,
+
+        // Footer text: env var > localStorage > default
+        footerText: process.env.NEXT_PUBLIC_FOOTER_TEXT || localSettings.footerText || defaultSettings.footerText,
+
+        // RSS Feed visibility: env var > localStorage > default
+        showRssFeed: process.env.NEXT_PUBLIC_SHOW_RSS !== undefined
+            ? process.env.NEXT_PUBLIC_SHOW_RSS === 'true'
+            : localSettings.showRssFeed ?? defaultSettings.showRssFeed,
+
+        // Unsplash API key: env var > localStorage
+        unsplashApiKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || localSettings.unsplashApiKey || '',
+
+        // Admin password handled separately
+        adminPassword: localSettings.adminPassword || '',
+
+        // Notion settings (localStorage only for now)
+        notionPageUrl: localSettings.notionPageUrl,
+        enableNotionSync: localSettings.enableNotionSync,
+    };
+}
+
+// Save site settings (to localStorage - for local dev)
 export function saveSiteSettings(settings: Partial<SiteSettings>): SiteSettings {
-    const current = getSiteSettings();
-    const updated = { ...current, ...settings };
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
-    return updated;
+    const localSettings = getLocalStorageSettings();
+    const updated = { ...localSettings, ...settings };
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
+    }
+    return getSiteSettings();
 }
 
 // Check if Unsplash API is configured
@@ -47,8 +96,7 @@ export function hasUnsplashApiKey(): boolean {
 
 // Get Unsplash API key
 export function getUnsplashApiKey(): string {
-    const settings = getSiteSettings();
-    return settings.unsplashApiKey || process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || '';
+    return getSiteSettings().unsplashApiKey;
 }
 
 // Get admin password
@@ -56,25 +104,49 @@ export function getUnsplashApiKey(): string {
 //          2. localStorage (local development only)
 //          3. Default fallback
 export function getAdminPassword(): string {
-    // Environment variable takes priority (secure for production)
     const envPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
     if (envPassword) {
         return envPassword;
     }
 
-    // Fall back to localStorage (for local development)
     if (typeof window !== 'undefined') {
-        const settings = getSiteSettings();
-        if (settings.adminPassword) {
-            return settings.adminPassword;
+        const localSettings = getLocalStorageSettings();
+        if (localSettings.adminPassword) {
+            return localSettings.adminPassword;
         }
     }
 
-    // Default password (only if nothing else is set)
     return 'admin123';
 }
 
-// Check if password is set via environment variable
-export function isPasswordFromEnv(): boolean {
-    return !!process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+// Check if a setting is controlled by environment variable
+export function isSettingFromEnv(setting: keyof SiteSettings): boolean {
+    const envMap: Partial<Record<keyof SiteSettings, string | undefined>> = {
+        title: process.env.NEXT_PUBLIC_SITE_TITLE,
+        icon: process.env.NEXT_PUBLIC_SITE_ICON,
+        description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION,
+        theme: process.env.NEXT_PUBLIC_THEME,
+        welcomeText: process.env.NEXT_PUBLIC_WELCOME_TEXT,
+        showFooter: process.env.NEXT_PUBLIC_SHOW_FOOTER,
+        footerText: process.env.NEXT_PUBLIC_FOOTER_TEXT,
+        showRssFeed: process.env.NEXT_PUBLIC_SHOW_RSS,
+        unsplashApiKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
+        adminPassword: process.env.NEXT_PUBLIC_ADMIN_PASSWORD,
+    };
+    return !!envMap[setting];
 }
+
+// Check if any settings are from environment variables
+export function hasEnvSettings(): boolean {
+    return !!(
+        process.env.NEXT_PUBLIC_SITE_TITLE ||
+        process.env.NEXT_PUBLIC_SITE_ICON ||
+        process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
+        process.env.NEXT_PUBLIC_THEME ||
+        process.env.NEXT_PUBLIC_WELCOME_TEXT ||
+        process.env.NEXT_PUBLIC_SHOW_FOOTER ||
+        process.env.NEXT_PUBLIC_FOOTER_TEXT ||
+        process.env.NEXT_PUBLIC_SHOW_RSS
+    );
+}
+

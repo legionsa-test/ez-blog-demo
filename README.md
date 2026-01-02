@@ -49,26 +49,52 @@ ezBlog is built for speed:
 
 ---
 
-## 🔒 Security
+## 🔒 Configuration
 
-ezBlog uses **environment variable-based authentication** for production deployments.
+ezBlog uses **environment variables** for all settings. This ensures all visitors see the same configuration consistently.
 
-### Setting Your Admin Password
+### Environment Variables
 
-**For Production (Vercel/Netlify):**
+Set these in your **Vercel Dashboard → Settings → Environment Variables**, then **Redeploy**:
 
-1. Go to your deployment platform (Vercel Dashboard)
-2. Navigate to **Settings → Environment Variables**
-3. Add a new variable:
-   - **Name:** `NEXT_PUBLIC_ADMIN_PASSWORD`
-   - **Value:** Your secure password
-4. Redeploy your site
+#### Security
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_ADMIN_PASSWORD` | **Required!** Admin login password | `MySecureP@ss123` |
 
-> ⚠️ **Important:** Without this environment variable, anyone can log in with the default password!
+#### Site Settings
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_SITE_TITLE` | Site title | `My Awesome Blog` |
+| `NEXT_PUBLIC_SITE_ICON` | Site emoji icon | `🚀` |
+| `NEXT_PUBLIC_SITE_DESCRIPTION` | Site meta description | `A blog about tech` |
+| `NEXT_PUBLIC_THEME` | Theme (`ezblog1`, `atavist`, `supersimple`) | `supersimple` |
+| `NEXT_PUBLIC_WELCOME_TEXT` | Homepage welcome text | `Welcome to` |
 
-**For Local Development:**
+#### Author Profile
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_AUTHOR_NAME` | Author display name | `John Doe` |
+| `NEXT_PUBLIC_AUTHOR_AVATAR` | Author avatar URL | `https://example.com/avatar.jpg` |
+| `NEXT_PUBLIC_AUTHOR_BIO` | Author bio | `Tech enthusiast & writer` |
 
-You can set a password in Admin → Settings → Security. This is stored in your browser's localStorage and only works on that browser.
+#### Display Options
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_SHOW_FOOTER` | Show footer | `true` or `false` |
+| `NEXT_PUBLIC_FOOTER_TEXT` | Footer text (`{year}` = current year) | `© {year} My Blog` |
+| `NEXT_PUBLIC_SHOW_RSS` | Show RSS link in navigation | `true` or `false` |
+
+#### Integrations
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | Unsplash API key for images | `your-api-key` |
+
+> ⚠️ **Important:** Without `NEXT_PUBLIC_ADMIN_PASSWORD`, anyone can log in with the default password `admin123`!
+
+### How It Works
+
+Settings are configured via **environment variables only**. The Admin Settings page shows current values for reference but cannot be edited directly — you must update env vars in Vercel and redeploy.
 
 ### Security Features
 
@@ -76,7 +102,6 @@ You can set a password in Admin → Settings → Security. This is stored in you
 |---------|--------|
 | **Environment Variable Auth** | ✅ Server-controlled password |
 | **Brute-force Protection** | ✅ 5 attempts, 15 min lockout |
-| **Server-side Rate Limiting** | ✅ IP-based tracking |
 | **XSS Protection** | ✅ Content sanitization |
 | **SSRF Protection** | ✅ Domain validation for Notion |
 

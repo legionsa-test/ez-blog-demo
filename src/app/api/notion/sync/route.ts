@@ -307,7 +307,7 @@ export async function POST(request: NextRequest) {
             const rows = extractDatabaseRows(recordMap);
 
             // For each row, fetch its content
-            const posts = await Promise.all(
+            const items = await Promise.all(
                 rows.map(async (row) => {
                     try {
                         const pageRecordMap = await notion.getPage(row.id);
@@ -316,6 +316,11 @@ export async function POST(request: NextRequest) {
                         const props = row.properties;
                         const title = props.title || 'Untitled';
                         const slug = props.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+                        // Detect content type from 'type' column (Post, Page, etc.)
+                        // Accepts: 'post', 'page', 'Post', 'Page'
+                        const typeValue = (props.type?.[0] || props.contenttype?.[0] || 'post').toLowerCase();
+                        const contentType = typeValue === 'page' ? 'page' : 'post';
 
                         return {
                             notionId: row.id,
@@ -327,6 +332,7 @@ export async function POST(request: NextRequest) {
                             tags: props.tags || [],
                             status: (props.status === 'Published' || props.published === true) ? 'published' : 'draft',
                             publishedAt: props.date || props.published_date || null,
+                            contentType, // 'post' or 'page'
                         };
                     } catch (e) {
                         console.error('Error fetching page content:', row.id, e);
@@ -335,10 +341,16 @@ export async function POST(request: NextRequest) {
                 })
             );
 
+            // Separate posts and pages
+            const validItems = items.filter(Boolean);
+            const posts = validItems.filter((item: any) => item.contentType === 'post');
+            const pages = validItems.filter((item: any) => item.contentType === 'page');
+
             return NextResponse.json({
                 success: true,
                 type: 'database',
-                posts: posts.filter(Boolean),
+                posts,
+                pages,
             });
         } else {
             // It's a single page - convert to a single post

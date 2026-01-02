@@ -41,9 +41,22 @@ export function getAuthorById(id: string): Author | null {
 }
 
 // Get default/primary author
+// Priority: 1. Environment variables (production)
+//          2. localStorage (local development)
+//          3. Default values
 export function getPrimaryAuthor(): Author {
     const authors = getAuthors();
-    return authors[0] || defaultAuthor;
+    const localAuthor = authors[0] || defaultAuthor;
+
+    // Environment variables take priority
+    return {
+        id: localAuthor.id,
+        name: process.env.NEXT_PUBLIC_AUTHOR_NAME || localAuthor.name,
+        avatar: process.env.NEXT_PUBLIC_AUTHOR_AVATAR || localAuthor.avatar,
+        bio: process.env.NEXT_PUBLIC_AUTHOR_BIO || localAuthor.bio,
+        email: localAuthor.email,
+        socialLinks: localAuthor.socialLinks,
+    };
 }
 
 // Save author (create or update)
