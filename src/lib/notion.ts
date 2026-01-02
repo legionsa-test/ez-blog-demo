@@ -165,7 +165,7 @@ function blocksToHtml(recordMap: any, pageId: string): string {
 
                 let embedSrc = source;
                 // Handle Figma specifically
-                if (source.includes('figma.com/file') || source.includes('figma.com/proto') || source.includes('figma.com/design')) {
+                if (source.includes('figma.com')) {
                     if (!source.includes('embed_host')) {
                         embedSrc = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
                     }

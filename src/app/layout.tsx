@@ -69,7 +69,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <I18nProvider>
-            <LayoutWrapper>
+            <LayoutWrapper initialTheme={process.env.NEXT_PUBLIC_THEME as string || 'ezblog1'}>
               {children}
             </LayoutWrapper>
             <Toaster />

@@ -6,18 +6,20 @@ import { Footer } from '@/components/layout/footer';
 import { SkipLink } from '@/components/layout/skip-link';
 import { getSiteSettings } from '@/lib/site-settings';
 
-interface LayoutWrapperProps {
+export interface LayoutWrapperProps {
     children: React.ReactNode;
+    initialTheme?: string;
 }
 
-export function LayoutWrapper({ children }: LayoutWrapperProps) {
-    const [theme, setTheme] = useState<string>('ezblog1');
-    const [mounted, setMounted] = useState(false);
+export function LayoutWrapper({ children, initialTheme = 'ezblog1' }: LayoutWrapperProps) {
+    const [theme, setTheme] = useState<string>(initialTheme);
 
     useEffect(() => {
+        // Check for client-side override (localStorage)
         const settings = getSiteSettings();
-        setTheme(settings.theme || 'ezblog1');
-        setMounted(true);
+        if (settings.theme && settings.theme !== theme) {
+            setTheme(settings.theme);
+        }
 
         // Listen for theme changes
         const handleSettingsUpdate = () => {
@@ -26,22 +28,11 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
         };
         window.addEventListener('site-settings-updated', handleSettingsUpdate);
         return () => window.removeEventListener('site-settings-updated', handleSettingsUpdate);
-    }, []);
+    }, [theme]);
 
     // Magazine and Supersimple themes have their own layout
     const isMagazineTheme = theme === 'atavist';
     const isSupersimpleTheme = theme === 'supersimple';
-
-    // Show minimal layout during hydration to prevent flash
-    if (!mounted) {
-        return (
-            <div className="relative flex min-h-screen flex-col">
-                <main id="main-content" className="flex-1" role="main">
-                    {children}
-                </main>
-            </div>
-        );
-    }
 
     // Supersimple has its own complete layout
     if (isSupersimpleTheme) {
