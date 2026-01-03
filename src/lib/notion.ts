@@ -181,7 +181,7 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                     properties?.link?.[0]?.[0];
 
                 if (!source) {
-                    console.log('[Notion] Embed block has no source:', type, JSON.stringify(format).slice(0, 300));
+                    console.log('[Notion] Embed block has no source:', type, JSON.stringify(format || {}).slice(0, 300));
                     return '';
                 }
 
@@ -300,7 +300,7 @@ function blocksToHtml(recordMap: any, pageId: string): string {
             default: {
                 // Log unknown block types for debugging
                 if (type && type !== 'page') {
-                    console.log('[Notion] Unknown block type:', type, 'Properties:', JSON.stringify(properties).slice(0, 200), 'Format:', JSON.stringify(format).slice(0, 200));
+                    console.log('[Notion] Unknown block type:', type, 'Properties:', JSON.stringify(properties || {}).slice(0, 200), 'Format:', JSON.stringify(format || {}).slice(0, 200));
                 }
 
                 // Try to extract an embed source from unknown types
@@ -455,8 +455,20 @@ export async function fetchNotionData(pageUrl: string) {
     const items = await Promise.all(
         rows.map(async (row) => {
             try {
+                console.log('[Notion] Fetching page content for:', row.id, '| Title:', row.properties?.title);
                 const pageRecordMap = await notion.getPage(row.id);
-                const content = blocksToHtml(pageRecordMap, row.id);
+
+                if (!pageRecordMap?.block) {
+                    console.log('[Notion] No block data for page:', row.id);
+                }
+
+                let content = '';
+                try {
+                    content = blocksToHtml(pageRecordMap, row.id);
+                } catch (htmlError: any) {
+                    console.error('[Notion] blocksToHtml error for:', row.id, '| Error:', htmlError?.message, '| Stack:', htmlError?.stack?.slice(0, 300));
+                    content = '<p>Content could not be loaded</p>';
+                }
 
                 const props = row.properties;
 

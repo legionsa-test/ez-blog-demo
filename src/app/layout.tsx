@@ -21,29 +21,29 @@ const crimsonPro = Crimson_Pro({
   subsets: ['latin'],
 });
 
+const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || 'ezBlog';
+const siteDescription = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'A beautiful, modern headless blog CMS with no backend required.';
+
 export const metadata: Metadata = {
   title: {
-    default: 'ezBlog - Modern Headless Blog',
-    template: '%s | ezBlog',
+    default: `${siteTitle} - Modern Headless Blog`,
+    template: `${siteTitle} - %s`,
   },
-  description:
-    'A beautiful, modern headless blog CMS with no backend required. Create stunning content with our Tiptap editor, Unsplash integration, and more.',
+  description: siteDescription,
   keywords: ['blog', 'cms', 'headless', 'nextjs', 'react'],
-  authors: [{ name: 'ezBlog' }],
+  authors: [{ name: siteTitle }],
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    siteName: 'ezBlog',
-    title: 'ezBlog - Modern Headless Blog',
-    description:
-      'A beautiful, modern headless blog CMS with no backend required.',
+    siteName: siteTitle,
+    title: `${siteTitle} - Modern Headless Blog`,
+    description: siteDescription,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ezBlog - Modern Headless Blog',
-    description:
-      'A beautiful, modern headless blog CMS with no backend required.',
+    title: `${siteTitle} - Modern Headless Blog`,
+    description: siteDescription,
   },
   robots: {
     index: true,
