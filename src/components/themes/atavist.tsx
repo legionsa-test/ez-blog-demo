@@ -305,7 +305,7 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
                                     {post.coverImage ? (
                                         <Image
                                             src={post.coverImage}
-                                            alt={post.title}
+                                            alt={post.coverImageAlt || post.title}
                                             fill
                                             className="object-cover transition-transform duration-700 group-hover:scale-105"
                                             priority={index === 0}
@@ -328,12 +328,12 @@ export function AtavistLayout({ posts, isLoading }: AtavistLayoutProps) {
                                             {/* Title */}
                                             <h2
                                                 className={`mt-3 font-serif font-bold leading-tight text-white ${post.coverImageSize === 'big'
-                                                        ? 'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl'
-                                                        : post.coverImageSize === 'small'
-                                                            ? 'text-2xl sm:text-3xl lg:text-4xl'
-                                                            : index === 0
-                                                                ? 'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl'
-                                                                : 'text-2xl sm:text-3xl lg:text-4xl'
+                                                    ? 'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl'
+                                                    : post.coverImageSize === 'small'
+                                                        ? 'text-2xl sm:text-3xl lg:text-4xl'
+                                                        : index === 0
+                                                            ? 'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl'
+                                                            : 'text-2xl sm:text-3xl lg:text-4xl'
                                                     }`}
                                             >
                                                 {post.title}

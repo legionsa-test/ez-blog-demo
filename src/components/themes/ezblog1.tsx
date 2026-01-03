@@ -124,7 +124,7 @@ export function EzBlog1Layout({
                                             {featuredPost.coverImage ? (
                                                 <Image
                                                     src={featuredPost.coverImage}
-                                                    alt={featuredPost.title}
+                                                    alt={featuredPost.coverImageAlt || featuredPost.title}
                                                     fill
                                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                     priority
@@ -195,7 +195,7 @@ function PostCard({ post }: { post: Post }) {
                         {post.coverImage ? (
                             <Image
                                 src={post.coverImage}
-                                alt={post.title}
+                                alt={post.coverImageAlt || post.title}
                                 fill
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                             />

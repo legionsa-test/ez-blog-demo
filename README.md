@@ -91,6 +91,7 @@ Create a Notion database with these columns (aliases supported):
 | `Summary` | Text | `summary`, `excerpt`, `description`, `subtitle`, `intro` | Short description |
 | `Hero Image` | URL | `hero image`, `cover`, `image`, `thumbnail`, `banner` | Cover image URL |
 | `Hero Size` | Select | `hero size`, `herosize`, `hero_size` | `Big`, `Small` |
+| `Hero ALT Text` | Text | `hero alt text`, `hero alt`, `alt text` | Image alt text for SEO |
 | `Date` | Date | `date`, `published_date`, `publish date`, `created` | Publish date |
 
 ### 2. Make Public

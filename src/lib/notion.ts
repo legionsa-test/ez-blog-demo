@@ -491,6 +491,11 @@ export async function fetchNotionData(pageUrl: string) {
                 ).toLowerCase();
                 const coverImageSize = heroSizeValue === 'big' ? 'big' : heroSizeValue === 'small' ? 'small' : undefined;
 
+                // Extract Hero ALT Text
+                const coverImageAlt = props['hero alt text'] || props['hero alt'] ||
+                    props['heroalttext'] || props['hero_alt_text'] ||
+                    props['alt text'] || props['alttext'] || '';
+
                 return {
                     notionId: row.id,
                     title,
@@ -499,6 +504,7 @@ export async function fetchNotionData(pageUrl: string) {
                     content,
                     coverImage,
                     coverImageSize,
+                    coverImageAlt,
                     tags,
                     status: isPublished ? 'published' : 'draft',
                     publishedAt,

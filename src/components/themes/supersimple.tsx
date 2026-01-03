@@ -168,7 +168,7 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                                 <div className="relative aspect-[2/1] w-full overflow-hidden">
                                     <Image
                                         src={latestPost.coverImage}
-                                        alt={latestPost.title}
+                                        alt={latestPost.coverImageAlt || latestPost.title}
                                         fill
                                         priority
                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -205,7 +205,7 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                                         <div className="relative aspect-[16/9] w-full overflow-hidden">
                                             <Image
                                                 src={post.coverImage}
-                                                alt={post.title}
+                                                alt={post.coverImageAlt || post.title}
                                                 fill
                                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
@@ -229,7 +229,7 @@ export function SupersimpleLayout({ posts, isLoading }: SupersimpleLayoutProps) 
                                             <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded">
                                                 <Image
                                                     src={post.coverImage}
-                                                    alt={post.title}
+                                                    alt={post.coverImageAlt || post.title}
                                                     fill
                                                     className="object-cover"
                                                 />
