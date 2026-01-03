@@ -658,3 +658,97 @@
   font-size: 0.875rem !important;
   line-height: 1.7 !important;
 }
+
+/* Toggle blocks - add left padding */
+.notion-toggle {
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+}
+
+.notion-toggle>summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.notion-toggle>div {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Callout blocks - ensure content visibility */
+.notion-callout {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  padding: 1rem !important;
+  margin: 1rem 0 !important;
+  border-radius: 0.5rem !important;
+  background: hsl(var(--muted) / 0.3) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.notion-callout-icon {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.notion-callout-text {
+  flex: 1;
+  min-width: 0;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Ensure callout text renders */
+.notion-callout .notion-page-content-inner,
+.notion-callout .notion-text {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Embed blocks (Figma, etc.) */
+.notion-embed,
+.notion-figma,
+.notion-asset-wrapper {
+  width: 100% !important;
+  margin: 1rem 0 !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+}
+
+.notion-asset-wrapper iframe {
+  width: 100% !important;
+  min-height: 400px !important;
+  border-radius: 0.75rem !important;
+  border: none !important;
+}
+
+/* External object instance (Figma uses this type) */
+.notion-external-object-instance,
+.notion-external_object_instance {
+  width: 100% !important;
+  min-height: 400px !important;
+  margin: 1rem 0 !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+}
+
+.notion-external-object-instance iframe,
+.notion-external_object_instance iframe {
+  width: 100% !important;
+  min-height: 400px !important;
+  border-radius: 0.75rem !important;
+  border: none !important;
+}
+
+/* Audio embeds (Spotify, SoundCloud) - larger radius to hide corners */
+.notion-audio,
+.notion-asset-wrapper[style*="spotify"],
+.notion-asset-wrapper[style*="soundcloud"] {
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+}
+
+.notion-audio iframe {
+  border-radius: 1rem !important;
+  border: none !important;
+}

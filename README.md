@@ -1,14 +1,14 @@
 # ✍️ ezBlog
 
-**A Notion-Powered Blog with Analytics Dashboard**
+**A Notion-Powered Blog with Zero Config**
 
-ezBlog syncs content directly from your Notion database — just like Nobelium! Write in Notion, see it on your blog within 5 minutes. The Admin Dashboard focuses on analytics, showing view counts and popular posts rather than content editing.
+Write in Notion, see it on your blog instantly. Fork, deploy to Vercel, and you're live.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-🔗 **[Live Demo](https://ez-blog-demo.vercel.app/)** | 📖 [Documentation](#-how-to-use) | 🚀 [Quick Start](#-quick-start)
+🔗 **[Live Demo](https://ez-blog-demo.vercel.app/)** | 📖 [Documentation](#-configuration) | 🚀 [Quick Start](#-quick-start)
 
 ---
 
@@ -17,61 +17,66 @@ ezBlog syncs content directly from your Notion database — just like Nobelium! 
 | Feature | Description |
 |---------|-------------|
 | ✅ **Notion-First** | Write in Notion, auto-sync to blog |
-| 📊 **Analytics Dashboard** | View counts, popular posts, sync status |
-| 🔄 **Auto-Sync** | Content updates every 5 minutes |
-| 🎨 **3 Themes** | Modern, Magazine, Minimal |
-| 🔒 **Secure** | Env-var config, brute-force protection |
+| 📊 **Vercel Analytics** | Built-in page views and visitors |
+| 💬 **GitHub Comments** | Giscus integration for discussions |
+| 🖼️ **Dynamic OG Images** | Auto-generated social preview images |
+| 🔄 **ISR Caching** | Fast loads with 1-hour revalidation |
 | 🆓 **Free Hosting** | Deploy on Vercel for free |
 
-### Perfect For:
-- ✍️ **Writers** who love Notion's editing experience
-- 🎨 **Designers** who want a beautiful blog without coding
-- 🚀 **Indie developers** who want something lightweight
+---
+
+## ⚡ Quick Start
+
+### 1. Fork & Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/legionsa/ezBlog)
+
+### 2. Configure Environment Variables
+
+In Vercel → Settings → Environment Variables:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_NOTION_PAGE_URL` | ✅ | Your Notion database URL |
+| `NEXT_PUBLIC_SITE_URL` | ✅ | Your site URL (e.g., `https://yourblog.com`) |
+| `NEXT_PUBLIC_SITE_TITLE` | | Site title (default: `ezBlog`) |
+
+### 3. Done!
+
+Your blog is live. Content syncs from Notion automatically.
 
 ---
 
-## ⚡ How It Works
+## 🔧 Configuration
 
-```
-Write in Notion → Auto-sync (5 min) → Blog Updated
-                                     ↓
-                      Admin Dashboard shows analytics
-```
-
-| Component | Description |
-|-----------|-------------|
-| **Notion Database** | Your content source (posts, pages) |
-| **Server API** | Fetches & caches Notion content |
-| **Blog Frontend** | Displays posts with themes |
-| **Admin Dashboard** | Read-only analytics (view counts, popular posts) |
-
-> ⚠️ **Note:** Content is managed in Notion only. The Admin Dashboard is for viewing analytics, not editing content.
-
----
-
-## 🔒 Configuration
-
-All settings use **environment variables**. Set in Vercel → Redeploy.
-
-### Required
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_ADMIN_PASSWORD` | Admin login password |
-| `NEXT_PUBLIC_NOTION_PAGE_URL` | Your Notion database URL |
-| `NEXT_PUBLIC_SITE_URL` | Your site's full URL (e.g., `https://yourblog.com`) — used for RSS feed, sitemap, and SEO |
+Copy `.env.example` to `.env.local` for local development.
 
 ### Site Settings
+
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `NEXT_PUBLIC_SITE_TITLE` | Site title | `ezBlog` |
-| `NEXT_PUBLIC_SITE_ICON` | Site emoji | `✍️` |
-| `NEXT_PUBLIC_THEME` | `ezblog1`, `atavist`, `supersimple` | `supersimple` |
-| `NEXT_PUBLIC_AUTHOR_NAME` | Author name | `Author` |
-| `NEXT_PUBLIC_AUTHOR_AVATAR` | Author avatar URL | — |
+| `NEXT_PUBLIC_SITE_DESCRIPTION` | Site description | — |
+| `NEXT_PUBLIC_SITE_URL` | Full URL for SEO/RSS | — |
 
+### Author
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_AUTHOR_NAME` | Author name | `Admin` |
 | `NEXT_PUBLIC_AUTHOR_BIO` | Author bio | — |
-| `NEXT_PUBLIC_SHOW_FOOTER` | Show footer | `true` |
-| `NEXT_PUBLIC_SHOW_RSS` | Show RSS link | `true` |
+| `NEXT_PUBLIC_AUTHOR_AVATAR` | Avatar URL | `/avatar.svg` |
+
+### Comments (Giscus)
+
+Get values from [giscus.app](https://giscus.app):
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_GISCUS_REPO` | `username/repo-name` |
+| `NEXT_PUBLIC_GISCUS_REPO_ID` | Repository ID |
+| `NEXT_PUBLIC_GISCUS_CATEGORY` | Category name |
+| `NEXT_PUBLIC_GISCUS_CATEGORY_ID` | Category ID |
 
 ---
 
@@ -79,130 +84,55 @@ All settings use **environment variables**. Set in Vercel → Redeploy.
 
 ### 1. Create Database
 
-Create a Notion database with these columns (aliases supported):
+Create a Notion database with these properties:
 
-| Property | Type | Aliases | Values |
-|----------|------|---------|--------|
-| `Title` | Title | — | Post title |
-| `Slug` | Text | `slug`, `url`, `permalink` | URL slug |
-| `Status` | Select | `status` | `Published`, `Draft` |
-| `Type` | Select | `type`, `contenttype`, `content type` | `Post`, `Page` |
-| `Tags` | Multi-select | `tags`, `categories`, `labels` | Tag names |
-| `Summary` | Text | `summary`, `excerpt`, `description`, `subtitle`, `intro` | Short description |
-| `Hero Image` | URL | `hero image`, `cover`, `image`, `thumbnail`, `banner` | Cover image URL |
-| `Hero Size` | Select | `hero size`, `herosize`, `hero_size` | `Big`, `Small` |
-| `Hero ALT Text` | Text | `hero alt text`, `hero alt`, `alt text` | Image alt text for SEO |
-| `Date` | Date | `date`, `published_date`, `publish date`, `created` | Publish date |
+| Property | Type | Description |
+|----------|------|-------------|
+| `Title` | Title | Post title |
+| `Slug` | Text | URL slug (or auto-generated from title) |
+| `Status` | Select | `Published` or `Draft` |
+| `Type` | Select | `Post` or `Page` |
+| `Tags` | Multi-select | Categories/tags |
+| `Summary` | Text | Excerpt for previews |
+| `Hero Image` | URL | Cover image |
+| `Date` | Date | Publish date |
 
-### 2. Make Public
+### 2. Share Publicly
 
 1. Click **Share** → Enable **Share to web**
 2. Copy the public URL
+3. Set as `NEXT_PUBLIC_NOTION_PAGE_URL`
 
-### 3. Configure
-
-Set `NEXT_PUBLIC_NOTION_PAGE_URL` in Vercel and redeploy.
-
-### Auto-Sync
-
-| Feature | Behavior |
-|---------|----------|
-| **Cache Duration** | 5 minutes |
-| **All Visitors** | See same cached content |
-| **Updates** | Automatically within 5 min |
-
-### Supported Notion Blocks
-
-ezBlog renders most Notion block types:
+### Supported Blocks
 
 | Category | Blocks |
 |----------|--------|
-| **Text** | Paragraphs, Headings (H1–H3), Quote, Callout, Toggle, Divider |
-| **Lists** | Bulleted, Numbered, To-do (with checkboxes) |
-| **Media** | Images, Video (YouTube, Vimeo, Loom), Audio (Spotify, SoundCloud), PDF, Files |
-| **Tables** | Simple tables, Database views (placeholder) |
-| **Layout** | 2–5 column layouts, Toggle with children |
-| **Advanced** | Equations, Link to Page, Synced Blocks |
-
-### Supported Embeds (70+ Domains)
-
-| Category | Services |
-|----------|----------|
-| **Design** | Figma, Canva, Sketch, InVision, Framer, Excalidraw |
-| **Video** | YouTube, Vimeo, Loom, Dailymotion |
-| **Audio** | Spotify, SoundCloud |
-| **Collaboration** | Miro, Whimsical, Lucidchart, Mural |
-| **Code** | CodePen, GitHub Gist, CodeSandbox, Replit, StackBlitz |
-| **Google** | Maps, Docs, Drive, Sheets, Slides, Calendar |
-| **Social** | Twitter/X, Instagram, TikTok, LinkedIn |
-| **Forms** | Typeform, Tally, Airtable, Google Forms |
-| **Project** | Trello, Asana, ClickUp, Notion, Linear, Monday |
-| **Atlassian** | Jira, Confluence |
-| **Communication** | Zoom, Discord, Slack |
-| **Storage** | Dropbox, OneDrive, Box, Evernote |
+| **Text** | Paragraphs, Headings, Quote, Callout, Toggle, Divider |
+| **Lists** | Bulleted, Numbered, To-do |
+| **Media** | Images, Video, Audio, PDF |
+| **Embeds** | Figma, YouTube, Spotify, CodePen, Miro, 70+ more |
+| **Layout** | Columns, Table of Contents |
+| **Advanced** | Equations, Code blocks with syntax highlighting |
 
 ---
 
-## 🚀 Quick Start
+## 📈 Features
 
-### Deploy to Vercel
+### Vercel Analytics
 
-1. Fork this repository
-2. Import to [vercel.com](https://vercel.com)
-3. Add environment variables:
-   - `NEXT_PUBLIC_ADMIN_PASSWORD`
-   - `NEXT_PUBLIC_NOTION_PAGE_URL`
-4. Deploy
+Free, zero-config analytics. Just enable in Vercel Dashboard → Analytics.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/legionsa/ezBlog)
+### Dynamic OG Images
 
-### Run Locally
+Auto-generated social preview images at `/api/og?title=...`
 
-```bash
-git clone https://github.com/legionsa/ezBlog.git
-cd ezBlog
-npm install
-npm run dev
-# Open http://localhost:3000
-```
+### RSS Feed
 
----
+Available at `/feed.xml` — auto-generated from Notion posts.
 
-## � Admin Dashboard
+### Sitemap
 
-The admin panel is **analytics-focused** (not for editing):
-
-| Section | Purpose |
-|---------|---------|
-| **Analytics** | View counts, popular posts, Notion sync status |
-| **Posts** | Read-only list from Notion with view counts |
-| **Pages** | Read-only list of static pages |
-| **Settings** | Environment variable reference, manual sync |
-
-> 💡 **To edit content:** Open Notion → Edit → Changes appear in 5 min
-
----
-
-## 🎨 Themes
-
-| Theme | Style |
-|-------|-------|
-| `ezblog1` | Modern with featured posts |
-| `atavist` | Magazine with full-width images |
-| `supersimple` | Minimal, text-focused |
-
-Set via `NEXT_PUBLIC_THEME` environment variable.
-
----
-
-## � Security
-
-| Feature | Status |
-|---------|--------|
-| **Env-Var Password** | ✅ Server-controlled |
-| **Brute-Force Protection** | ✅ 5 attempts, 15 min lockout |
-| **XSS Protection** | ✅ HTML sanitization |
-| **SSRF Protection** | ✅ Notion domain validation |
+Available at `/sitemap.xml` — includes all published posts and pages.
 
 ---
 
@@ -210,12 +140,26 @@ Set via `NEXT_PUBLIC_THEME` environment variable.
 
 | Technology | Purpose |
 |------------|---------|
-| Next.js 16 | React framework |
+| Next.js 16 | React framework with App Router |
 | TypeScript | Type safety |
-| Tailwind CSS | Styling |
+| Tailwind CSS 4 | Styling |
 | shadcn/ui | UI components |
-| notion-client | Notion API |
-| sanitize-html | XSS protection |
+| react-notion-x | Notion renderer |
+| Giscus | GitHub-based comments |
+
+---
+
+## 🏃 Run Locally
+
+```bash
+git clone https://github.com/legionsa/ezBlog.git
+cd ezBlog
+npm install
+cp .env.example .env.local  # Edit with your values
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
 
 ---
 

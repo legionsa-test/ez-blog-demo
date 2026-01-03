@@ -42,10 +42,27 @@ interface NotionPageRendererProps {
     className?: string;
 }
 
+// Extract text from Notion rich text array
+const extractTextFromRichText = (richText: any): string => {
+    if (!richText) return '';
+    if (typeof richText === 'string') return richText;
+    if (Array.isArray(richText)) {
+        return richText.map((item: any) => {
+            if (typeof item === 'string') return item;
+            if (Array.isArray(item) && item[0]) return item[0];
+            return '';
+        }).join('');
+    }
+    return '';
+};
+
 // Custom Callout Component
 const CustomCallout = ({ block, children }: { block: any; children: React.ReactNode }) => {
-    const { format } = block;
+    const { format, properties } = block;
     const icon = format?.page_icon || '💡';
+
+    // Extract text from block properties if children are empty
+    const blockText = extractTextFromRichText(properties?.title);
 
     return (
         <aside
@@ -53,9 +70,42 @@ const CustomCallout = ({ block, children }: { block: any; children: React.ReactN
         >
             <span className="text-xl leading-6 select-none">{icon}</span>
             <div className="flex-1 min-w-0 text-foreground">
-                {children}
+                {children || blockText || '(Empty callout)'}
             </div>
         </aside>
+    );
+};
+
+// Custom Embed Component for Figma and other embeds
+const CustomEmbed = ({ block }: { block: any }) => {
+    const { format, properties } = block;
+
+    // Get the embed URL from various possible locations
+    let embedUrl =
+        properties?.source?.[0]?.[0] ||
+        format?.display_source ||
+        format?.uri ||
+        '';
+
+    if (!embedUrl) {
+        console.log('[NotionRenderer] Embed block has no URL:', block.type, JSON.stringify(format || {}).slice(0, 200));
+        return null;
+    }
+
+    // Fix Figma URLs
+    if (embedUrl.includes('figma.com') && !embedUrl.includes('embed_host')) {
+        embedUrl = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(embedUrl)}`;
+    }
+
+    return (
+        <div className="my-4 w-full aspect-video">
+            <iframe
+                src={embedUrl}
+                className="w-full h-full rounded-lg border border-border bg-muted"
+                frameBorder="0"
+                allowFullScreen
+            />
+        </div>
     );
 };
 
@@ -67,35 +117,42 @@ const fixEmbedUrls = (recordMap: ExtendedRecordMap) => {
     newRecordMap.block = { ...recordMap.block };
 
     Object.keys(newRecordMap.block).forEach((blockId) => {
-        const block = newRecordMap.block[blockId].value;
-        if (!block) return;
+        const blockWrapper = newRecordMap.block[blockId];
+        if (!blockWrapper?.value) return;
 
-        if (block.type === 'embed' || block.type === 'figma' || (block as any).type === 'maps') {
+        const block = blockWrapper.value;
+        const blockType = block.type;
+
+        // Handle various embed block types including external_object_instance (used by Figma)
+        if (blockType === 'embed' || blockType === 'figma' || blockType === 'maps' ||
+            blockType === 'external_object_instance' || blockType === 'video') {
+
             const props = block.properties;
-            const format = block.format;
-            // Notion usually stores the URL in properties.source[0][0] or format.display_source
-            // But for Figma specifically, it sometimes uses format.uri
+            const format = block.format as any; // Use 'any' for flexible Notion format structure
+
+            // Check multiple locations for the URL
             const source =
                 props?.source?.[0]?.[0] ||
                 format?.display_source ||
-                (block as any).format?.uri;
+                format?.uri ||
+                format?.original_url;
 
             if (source && source.includes('figma.com') && !source.includes('embed_host')) {
                 // Construct fixed URL
                 const fixedUrl = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
 
                 // Mutate the block copy
-                newRecordMap.block[blockId] = {
-                    ...newRecordMap.block[blockId],
+                (newRecordMap.block as any)[blockId] = {
+                    ...blockWrapper,
                     value: {
                         ...block,
                         format: {
-                            ...block.format,
-                            display_source: fixedUrl, // Update for renderer
+                            ...(block.format || {}),
+                            display_source: fixedUrl,
                         },
                         properties: {
-                            ...block.properties,
-                            source: [[fixedUrl]], // Update source property too just in case
+                            ...(block.properties || {}),
+                            source: [[fixedUrl]],
                         }
                     }
                 };
