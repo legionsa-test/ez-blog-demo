@@ -531,11 +531,36 @@
   padding-right: 1rem;
 }
 
-/* Ensure proper spacing */
+/* Ensure proper spacing and readability */
 .notion-renderer-wrapper {
-  line-height: 1.75;
+  line-height: 1.9;
+  font-size: 1.125rem;
+  /* 18px */
+}
+
+/* Body text styling for readability */
+.notion-text,
+.notion-list,
+.notion-quote,
+.notion-callout-text,
+.notion-toggle {
+  font-size: 1.125rem;
+  /* 18px */
+  line-height: 1.9;
 }
 
 .notion-renderer-wrapper>* {
   margin-bottom: 1rem;
+}
+
+/* Hide Notion page properties (redundant with ezBlog header) */
+.notion-collection-row,
+.notion-collection-row-body,
+.notion-collection-row-property,
+.notion-page-properties,
+.notion-collection-page-properties,
+.notion-property,
+.notion-page-icon-inline,
+.notion-page-header {
+  display: none !important;
 }
