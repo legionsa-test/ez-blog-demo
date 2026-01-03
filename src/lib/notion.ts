@@ -26,56 +26,109 @@ const sanitizeConfig = {
         'div', 'span',
         'iframe', 'video', 'source', 'object', 'embed',
         'audio', 'aside', 'nav', 'details', 'summary',
-        'figure', 'figcaption'
+        'figure', 'figcaption',
+        'input', 'label', // For to-do checkboxes
+        'script', // For Twitter/social embeds
     ],
     allowedAttributes: {
         'a': ['href', 'title', 'target', 'rel'],
         'img': ['src', 'alt', 'width', 'height', 'loading'],
-        'iframe': ['src', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen', 'style', 'class', 'scrolling', 'loading'],
+        'iframe': ['src', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen', 'style', 'class', 'scrolling', 'loading', 'referrerpolicy', 'webkitallowfullscreen', 'mozallowfullscreen'],
         'video': ['src', 'controls', 'width', 'height', 'poster', 'autoplay', 'loop', 'muted', 'playsinline'],
         'audio': ['src', 'controls', 'autoplay', 'loop', 'muted', 'preload'],
         'source': ['src', 'type'],
         'object': ['data', 'type', 'width', 'height'],
         'embed': ['src', 'type', 'width', 'height'],
         'details': ['open'],
+        'input': ['type', 'checked', 'disabled', 'class'],
+        'blockquote': ['class', 'cite'],
+        'script': ['src', 'async', 'charset'],
         '*': ['class', 'id', 'style', 'aria-hidden'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowProtocolRelative: true,
-    // Allow iframes from trusted sources
+    // Allow iframes from trusted sources (comprehensive list for Notion embeds)
     allowedIframeHostnames: [
         // Design & Prototyping
         'www.figma.com', 'figma.com',
         'www.canva.com', 'canva.com',
         'excalidraw.com',
+        'www.sketch.com', 'sketch.com',
+        'abstract.com', 'app.abstract.com',
+        'invisionapp.com', 'www.invisionapp.com',
+        'framer.com', 'www.framer.com',
+
         // Video
         'www.youtube.com', 'youtube.com', 'www.youtube-nocookie.com',
         'player.vimeo.com', 'vimeo.com',
         'www.loom.com', 'loom.com',
+        'www.dailymotion.com', 'dailymotion.com',
+
         // Audio
-        'open.spotify.com', 'w.soundcloud.com',
-        // Collaboration
+        'open.spotify.com', 'embed.spotify.com',
+        'w.soundcloud.com', 'soundcloud.com',
+
+        // Collaboration & Whiteboard
         'miro.com', 'www.miro.com',
         'whimsical.com', 'www.whimsical.com',
         'www.lucidchart.com', 'lucidchart.com',
-        // Google
+        'mural.co', 'app.mural.co',
+
+        // Google Services
         'www.google.com', 'maps.google.com', 'docs.google.com', 'drive.google.com',
-        // Code
+        'calendar.google.com', 'sheets.google.com', 'slides.google.com',
+
+        // Code & Development
         'codepen.io', 'gist.github.com', 'codesandbox.io',
+        'replit.com', 'www.replit.com',
+        'stackblitz.com',
+        'jsfiddle.net',
+        'github.com', 'www.github.com',
+        'gitlab.com', 'www.gitlab.com',
+
         // Social
         'twitter.com', 'platform.twitter.com', 'publish.twitter.com',
+        'www.instagram.com', 'instagram.com',
+        'www.tiktok.com', 'tiktok.com',
+        'www.linkedin.com', 'linkedin.com',
+
         // Forms & Surveys
         'typeform.com', 'www.typeform.com',
-        'tally.so', 'airtable.com',
+        'tally.so', 'www.tally.so',
+        'airtable.com', 'www.airtable.com',
+        'forms.gle',
+
         // Project Management
         'trello.com', 'www.trello.com',
         'asana.com', 'app.asana.com',
         'app.clickup.com', 'clickup.com',
         'notion.so', 'www.notion.so',
-        // Documents
-        'onedrive.live.com', 'www.dropbox.com',
+        'linear.app',
+        'monday.com', 'www.monday.com',
+
+        // Atlassian
+        'jira.atlassian.com', 'atlassian.net',
+        'confluence.atlassian.com',
+
+        // Communication
+        'zoom.us', 'www.zoom.us',
+        'discord.com', 'www.discord.com',
+        'slack.com', 'www.slack.com',
+
+        // Documents & Storage
+        'onedrive.live.com', 'www.dropbox.com', 'dropbox.com',
+        'box.com', 'www.box.com',
+        'evernote.com', 'www.evernote.com',
+
+        // Support & CRM
+        'zendesk.com', 'www.zendesk.com',
+        'intercom.io', 'www.intercom.io',
+        'hubspot.com', 'www.hubspot.com',
+
         // Misc
         'calendly.com', 'www.calendly.com',
+        'pdf.js', // For PDF embedding
+        'embed.diagrams.net', 'viewer.diagrams.net', // draw.io
     ],
 };
 
@@ -120,10 +173,30 @@ function blocksToHtml(recordMap: any, pageId: string): string {
             case 'paragraph':
                 const text = extractText(properties?.title);
                 return text ? `<p>${text}</p>` : '';
-            case 'bulleted_list':
-                return `<li>${extractText(properties?.title)}</li>`;
-            case 'numbered_list':
-                return `<li>${extractText(properties?.title)}</li>`;
+            case 'bulleted_list': {
+                const itemText = extractText(properties?.title);
+                let childrenHtml = '';
+                if (block.content && block.content.length > 0) {
+                    childrenHtml = '<ul class="ml-4">';
+                    block.content.forEach((childId: string) => {
+                        childrenHtml += processBlock(childId);
+                    });
+                    childrenHtml += '</ul>';
+                }
+                return `<ul class="list-disc ml-4 my-2"><li>${itemText}${childrenHtml}</li></ul>`;
+            }
+            case 'numbered_list': {
+                const itemText = extractText(properties?.title);
+                let childrenHtml = '';
+                if (block.content && block.content.length > 0) {
+                    childrenHtml = '<ol class="ml-4">';
+                    block.content.forEach((childId: string) => {
+                        childrenHtml += processBlock(childId);
+                    });
+                    childrenHtml += '</ol>';
+                }
+                return `<ol class="list-decimal ml-4 my-2"><li>${itemText}${childrenHtml}</li></ol>`;
+            }
             case 'to_do': {
                 const todoText = extractText(properties?.title);
                 const checked = properties?.checked?.[0]?.[0] === 'Yes';

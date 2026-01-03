@@ -111,6 +111,36 @@ Set `NEXT_PUBLIC_NOTION_PAGE_URL` in Vercel and redeploy.
 | **All Visitors** | See same cached content |
 | **Updates** | Automatically within 5 min |
 
+### Supported Notion Blocks
+
+ezBlog renders most Notion block types:
+
+| Category | Blocks |
+|----------|--------|
+| **Text** | Paragraphs, Headings (H1–H3), Quote, Callout, Toggle, Divider |
+| **Lists** | Bulleted, Numbered, To-do (with checkboxes) |
+| **Media** | Images, Video (YouTube, Vimeo, Loom), Audio (Spotify, SoundCloud), PDF, Files |
+| **Tables** | Simple tables, Database views (placeholder) |
+| **Layout** | 2–5 column layouts, Toggle with children |
+| **Advanced** | Equations, Link to Page, Synced Blocks |
+
+### Supported Embeds (70+ Domains)
+
+| Category | Services |
+|----------|----------|
+| **Design** | Figma, Canva, Sketch, InVision, Framer, Excalidraw |
+| **Video** | YouTube, Vimeo, Loom, Dailymotion |
+| **Audio** | Spotify, SoundCloud |
+| **Collaboration** | Miro, Whimsical, Lucidchart, Mural |
+| **Code** | CodePen, GitHub Gist, CodeSandbox, Replit, StackBlitz |
+| **Google** | Maps, Docs, Drive, Sheets, Slides, Calendar |
+| **Social** | Twitter/X, Instagram, TikTok, LinkedIn |
+| **Forms** | Typeform, Tally, Airtable, Google Forms |
+| **Project** | Trello, Asana, ClickUp, Notion, Linear, Monday |
+| **Atlassian** | Jira, Confluence |
+| **Communication** | Zoom, Discord, Slack |
+| **Storage** | Dropbox, OneDrive, Box, Evernote |
+
 ---
 
 ## 🚀 Quick Start
