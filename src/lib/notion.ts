@@ -29,6 +29,8 @@ const sanitizeConfig = {
         'figure', 'figcaption',
         'input', 'label', // For to-do checkboxes
         'script', // For Twitter/social embeds
+        'button', // For copy buttons
+        'noscript', // For fallback links
     ],
     allowedAttributes: {
         'a': ['href', 'title', 'target', 'rel'],
@@ -43,6 +45,7 @@ const sanitizeConfig = {
         'input': ['type', 'checked', 'disabled', 'class'],
         'blockquote': ['class', 'cite'],
         'script': ['src', 'async', 'charset'],
+        'button': ['onclick', 'class', 'type'],
         '*': ['class', 'id', 'style', 'aria-hidden'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
@@ -207,8 +210,22 @@ function blocksToHtml(recordMap: any, pageId: string): string {
             }
             case 'quote':
                 return `<blockquote>${extractText(properties?.title)}</blockquote>`;
-            case 'code':
-                return `<pre><code>${extractText(properties?.title)}</code></pre>`;
+            case 'code': {
+                const codeText = extractText(properties?.title) || '';
+                const language = properties?.language?.[0]?.[0] || format?.code_language || '';
+                const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
+
+                return `<div class="code-block-wrapper relative my-4 rounded-lg overflow-hidden border border-border bg-[#1e1e1e]">
+                    <div class="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-border">
+                        <span class="text-xs text-muted-foreground font-mono">${language || 'Code'}</span>
+                        <button 
+                            onclick="navigator.clipboard.writeText(document.getElementById('${codeId}').textContent);this.innerHTML='Copied!';setTimeout(()=>this.innerHTML='Copy',2000)"
+                            class="text-xs px-2 py-1 rounded bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        >Copy</button>
+                    </div>
+                    <pre class="p-4 overflow-x-auto text-sm"><code id="${codeId}" class="language-${language.toLowerCase()}">${codeText}</code></pre>
+                </div>`;
+            }
             case 'image': {
                 const imgSrc = format?.display_source || properties?.source?.[0]?.[0] || block?.source?.[0]?.[0];
                 // Try multiple places for caption/alt text
@@ -541,25 +558,50 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                         return `<div class="aspect-video w-full my-4"><iframe src="${embedSrc}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
                     }
 
-                    // Google Maps
-                    if (source.includes('google.com/maps') || source.includes('maps.google.com')) {
-                        // Convert regular Google Maps URL to embed format
-                        let embedUrl = source;
-                        if (!source.includes('/embed')) {
-                            // Try to extract place or coordinates
-                            embedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d0!2d0!3d0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0!5e0!3m2!1sen!2s!4v${Date.now()}`;
-                            // If original URL has place info, use iframe with src parameter
-                            if (source.includes('@') || source.includes('place')) {
-                                embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(source)}&output=embed`;
-                            }
-                        }
-                        return `<div class="w-full my-4"><iframe src="${embedUrl}" width="100%" height="450" style="border:0;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="rounded-lg"></iframe></div>`;
+                    // Google Maps - Use embed API
+                    if (source.includes('google.com/maps') || source.includes('maps.google.com') || source.includes('goo.gl/maps')) {
+                        // For Google Maps embed to work, need to use Maps Embed API format
+                        // Show as a styled link card since Maps often blocks embedding
+                        return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-card hover:bg-muted transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">📍</span>
+                                <div>
+                                    <p class="font-medium">View on Google Maps</p>
+                                    <p class="text-sm text-muted-foreground">Click to open map in new tab</p>
+                                </div>
+                            </div>
+                        </a>`;
                     }
 
-                    // Twitter/X embed
+                    // Twitter/X - Use styled link card (script embedding unreliable in sanitized HTML)
                     if (source.includes('twitter.com') || source.includes('x.com')) {
-                        // For tweets, we need to use Twitter's embed script
-                        return `<div class="my-4"><blockquote class="twitter-tweet"><a href="${source}">View Tweet</a></blockquote><script async src="https://platform.twitter.com/widgets.js"></script></div>`;
+                        return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-card hover:bg-muted transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">𝕏</span>
+                                <div>
+                                    <p class="font-medium">View Post on X (Twitter)</p>
+                                    <p class="text-sm text-muted-foreground">Click to view the original post</p>
+                                </div>
+                            </div>
+                        </a>`;
+                    }
+
+                    // Spotify - styled card with play button link
+                    if (source.includes('spotify.com')) {
+                        const embedUrl = source.replace('open.spotify.com', 'open.spotify.com/embed');
+                        return `<div class="my-4">
+                            <iframe src="${embedUrl}" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" class="rounded-lg"></iframe>
+                            <noscript><a href="${source}" target="_blank" class="text-sm text-muted-foreground">Open in Spotify</a></noscript>
+                        </div>`;
+                    }
+
+                    // SoundCloud - styled card with player link
+                    if (source.includes('soundcloud.com')) {
+                        const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(source)}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
+                        return `<div class="my-4">
+                            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="${embedUrl}" class="rounded-lg"></iframe>
+                            <noscript><a href="${source}" target="_blank" class="text-sm text-muted-foreground">Open in SoundCloud</a></noscript>
+                        </div>`;
                     }
 
                     // Loom video
