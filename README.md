@@ -142,6 +142,116 @@ Available at `/sitemap.xml` — includes all published posts and pages.
 
 ---
 
+## 🎨 Theming
+
+ezBlog uses **Tailwind CSS v4** with CSS variables for theming. This makes it very easy to customize the look and feel of your blog by simply editing the CSS variables in `src/app/globals.css`.
+
+### How to Customize
+
+Open `src/app/globals.css`. You will see a `:root` block for light mode and a `.dark` block for dark mode.
+
+#### 1. Light Mode Colors
+
+Edit the variables in the `:root` selector:
+
+```css
+:root {
+  /* Background color of the page */
+  --background: oklch(1 0 0); 
+  
+  /* Main text color */
+  --foreground: oklch(0.145 0 0); 
+
+  /* Primary brand color (used for buttons, links, highlights) */
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0); /* Text on top of primary color */
+
+  /* Secondary color (used for muted elements, secondary buttons) */
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+}
+```
+
+#### 2. Dark Mode Colors
+
+Edit the variables in the `.dark` selector:
+
+```css
+.dark {
+  /* Dark mode background */
+  --background: oklch(0.145 0 0);
+  
+  /* Dark mode text */
+  --foreground: oklch(0.985 0 0); 
+}
+```
+
+### Fonts
+
+Fonts are configured in `src/app/layout.tsx` using `next/font`. To change them:
+1. Import a font from `next/font/google` in `layout.tsx`.
+2. Update the CSS variable definition in `src/app/globals.css`.
+
+---
+
+## 📐 Creating Templates
+
+ezBlog is a Next.js application, so "templates" are effectively React components. You can customize the layout of the home page (post list) and individual blog posts by modifying the respective page components.
+
+### 1. Home Page Template (Post List)
+
+The home page layout is defined in `src/app/page.tsx` and `src/app/home-client.tsx`.
+
+To change how posts are displayed (e.g., switching from Grid to List view), edit `src/app/home-client.tsx`.
+
+**Example: Switch to a Vertical List Layout**
+
+Change the grid loop:
+
+```tsx
+<div className="flex flex-col gap-6 max-w-2xl mx-auto">
+  {filteredPosts.map((post) => (
+    <div key={post.id} className="flex gap-4 border-b pb-4">
+       {/* Custom list item design */}
+       <img src={post.coverImage} className="w-24 h-24 object-cover rounded" />
+       <div>
+         <h2 className="text-xl font-bold">{post.title}</h2>
+         <p>{post.excerpt}</p>
+       </div>
+    </div>
+  ))}
+</div>
+```
+
+### 2. Blog Post Template
+
+Individual blog posts are rendered by `src/app/blog/[slug]/page.tsx`.
+
+To change the design of the post header (title, author, date, cover image), edit the `return` statement in `page.tsx`.
+
+**Example: Full-Width Hero Image Layout**
+
+```tsx
+return (
+  <article>
+    {/* Full width hero */}
+    <div className="w-full h-[50vh] relative">
+      <Image src={post.coverImage} fill className="object-cover" />
+      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+        <h1 className="text-white text-5xl font-bold">{post.title}</h1>
+      </div>
+    </div>
+
+    {/* Content Container */}
+    <div className="container py-10 max-w-3xl mx-auto">
+      <NotionRenderer recordMap={recordMap} />
+    </div>
+  </article>
+)
+```
+
+---
+
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
