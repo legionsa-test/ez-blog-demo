@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Download, Upload, Trash2, RefreshCw, Link2, ExternalLink } from 'lucide-react';
+import { Download, Upload, Trash2, RefreshCw, Link2, ExternalLink, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,9 +21,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import { exportPosts, importPosts, getPosts, savePost } from '@/lib/storage';
 import { getPages, savePage } from '@/lib/pages';
-import { getSiteSettings } from '@/lib/site-settings';
+import { getSiteSettings, saveSiteSettings } from '@/lib/site-settings';
 import { getPrimaryAuthor, saveAuthor } from '@/lib/authors';
 import { Author, SiteSettings } from '@/lib/types';
 import { toast } from 'sonner';
@@ -359,7 +360,123 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-            {/* Author Profile */}
+            {/* Giscus Comments Configuration */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5" />
+                        Comments (Giscus)
+                    </CardTitle>
+                    <CardDescription>
+                        Enable comments on your blog posts using GitHub Discussions via Giscus.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                        <Switch
+                            id="giscus-enabled"
+                            checked={siteSettings.giscusConfig?.enabled || false}
+                            onCheckedChange={(checked) =>
+                                setSiteSettings({
+                                    ...siteSettings,
+                                    giscusConfig: {
+                                        ...siteSettings.giscusConfig!,
+                                        enabled: checked
+                                    }
+                                })
+                            }
+                        />
+                        <Label htmlFor="giscus-enabled">Enable Comments</Label>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="giscus-repo">Repository (username/repo)</Label>
+                            <Input
+                                id="giscus-repo"
+                                value={siteSettings.giscusConfig?.repo || ''}
+                                onChange={(e) =>
+                                    setSiteSettings({
+                                        ...siteSettings,
+                                        giscusConfig: {
+                                            ...siteSettings.giscusConfig!,
+                                            repo: e.target.value
+                                        }
+                                    })
+                                }
+                                placeholder="e.g. kalvi/ez-blog"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="giscus-repo-id">Repository ID (R_...)</Label>
+                            <Input
+                                id="giscus-repo-id"
+                                value={siteSettings.giscusConfig?.repoId || ''}
+                                onChange={(e) =>
+                                    setSiteSettings({
+                                        ...siteSettings,
+                                        giscusConfig: {
+                                            ...siteSettings.giscusConfig!,
+                                            repoId: e.target.value
+                                        }
+                                    })
+                                }
+                                placeholder="e.g. R_kgDOL..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="giscus-category">Category Name</Label>
+                            <Input
+                                id="giscus-category"
+                                value={siteSettings.giscusConfig?.category || ''}
+                                onChange={(e) =>
+                                    setSiteSettings({
+                                        ...siteSettings,
+                                        giscusConfig: {
+                                            ...siteSettings.giscusConfig!,
+                                            category: e.target.value
+                                        }
+                                    })
+                                }
+                                placeholder="Announcements"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="giscus-category-id">Category ID (DIC_...)</Label>
+                            <Input
+                                id="giscus-category-id"
+                                value={siteSettings.giscusConfig?.categoryId || ''}
+                                onChange={(e) =>
+                                    setSiteSettings({
+                                        ...siteSettings,
+                                        giscusConfig: {
+                                            ...siteSettings.giscusConfig!,
+                                            categoryId: e.target.value
+                                        }
+                                    })
+                                }
+                                placeholder="e.g. DIC_kwDOL..."
+                            />
+                        </div>
+                    </div>
+
+                    <Button
+                        onClick={() => {
+                            saveSiteSettings(siteSettings);
+                            toast.success('Giscus settings saved!');
+                        }}
+                    >
+                        Save Comment Settings
+                    </Button>
+
+                    <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                        <p className="font-medium mb-1">How to get these values:</p>
+                        <p>1. Go to <a href="https://giscus.app" target="_blank" className="underline text-primary">giscus.app</a> configuration page.</p>
+                        <p>2. Enter your repository and enable Discussions.</p>
+                        <p>3. Copy the <code>data-repo-id</code>, <code>data-category</code>, and <code>data-category-id</code> from the generated script tag.</p>
+                    </div>
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Author Profile</CardTitle>
@@ -442,6 +559,6 @@ export default function SettingsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

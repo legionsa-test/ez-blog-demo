@@ -16,6 +16,13 @@ const defaultSettings: SiteSettings = {
     theme: 'supersimple',
     welcomeText: 'Welcome to',
     showRssFeed: false,
+    giscusConfig: {
+        enabled: false,
+        repo: '',
+        repoId: '',
+        category: '',
+        categoryId: '',
+    },
 };
 
 // Get settings from localStorage (for local development fallback)
@@ -75,6 +82,9 @@ export function getSiteSettings(): SiteSettings {
         // Notion settings: env var > localStorage
         notionPageUrl: process.env.NEXT_PUBLIC_NOTION_PAGE_URL || localSettings.notionPageUrl,
         enableNotionSync: process.env.NEXT_PUBLIC_NOTION_PAGE_URL ? true : localSettings.enableNotionSync,
+
+        // Giscus settings: localStorage > default
+        giscusConfig: localSettings.giscusConfig || defaultSettings.giscusConfig,
     };
 }
 

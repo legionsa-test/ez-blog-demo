@@ -1,120 +1,49 @@
-'use client';
 
-import { useEffect, useState } from 'react';
-import { getPublishedPosts, initializeSamplePosts, savePost } from '@/lib/storage';
-import { getSiteSettings } from '@/lib/site-settings';
+import HomeClient from './home-client';
+import { getNotionPosts } from '@/lib/notion';
 import { getPrimaryAuthor } from '@/lib/authors';
 import { Post } from '@/lib/types';
-import { EzBlog1Layout } from '@/components/themes/ezblog1';
-import { AtavistLayout } from '@/components/themes/atavist';
-import { SupersimpleLayout } from '@/components/themes/supersimple';
 
-export default function HomePage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [theme, setTheme] = useState<'ezblog1' | 'atavist' | 'supersimple'>('ezblog1');
+// ISR Revalidation (1 hour)
+export const revalidate = 3600;
 
-  useEffect(() => {
-    const loadContent = async () => {
-      initializeSamplePosts();
-      const settings = getSiteSettings();
-      setTheme(settings.theme || 'ezblog1');
+export default async function HomePage() {
+  let notionPosts: Post[] = [];
 
-      // If Notion URL is configured, fetch from server API
-      if (settings.notionPageUrl) {
-        try {
-          const response = await fetch('/api/notion/content');
-          const data = await response.json();
+  try {
+    // Server-side fetch for ISR
+    const rawPosts = await getNotionPosts();
 
-          if (data.posts && data.posts.length > 0) {
-            const author = getPrimaryAuthor();
+    if (rawPosts && rawPosts.length > 0) {
+      const author = getPrimaryAuthor();
 
-            // Notion posts only (don't merge with localStorage when Notion is configured)
-            const notionPosts: Post[] = data.posts
-              .filter((p: any) => p.status === 'published')
-              .map((post: any) => ({
-                id: post.notionId,
-                title: post.title,
-                slug: post.slug,
-                excerpt: post.excerpt || '',
-                content: post.content,
-                coverImage: post.coverImage || '',
-                coverImageSize: post.coverImageSize,
-                tags: post.tags || [],
-                status: 'published' as const,
-                publishedAt: post.publishedAt || new Date().toISOString(),
-                createdAt: post.publishedAt || new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                author,
-                notionId: post.notionId,
-                source: 'notion' as const,
-              }));
-
-            // When Notion is configured, only show Notion posts (no localStorage mixing)
-            setPosts(notionPosts);
-            setFilteredPosts(notionPosts);
-            setIsLoading(false);
-            return;
-          }
-        } catch (error) {
-          console.error('Error fetching Notion content:', error);
-        }
-      }
-
-      // Fallback to local posts
-      const allPosts = getPublishedPosts();
-      setPosts(allPosts);
-      setFilteredPosts(allPosts);
-      setIsLoading(false);
-    };
-
-    loadContent();
-  }, []);
-
-  useEffect(() => {
-    let filtered = posts;
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (post) =>
-          post.title.toLowerCase().includes(query) ||
-          post.excerpt.toLowerCase().includes(query) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(query))
-      );
+      notionPosts = rawPosts
+        .filter((p: any) => p.status === 'published')
+        .map((p: any) => ({
+          id: p.notionId,
+          title: p.title,
+          slug: p.slug,
+          excerpt: p.excerpt || '',
+          content: p.content,
+          coverImage: p.coverImage || '',
+          coverImageSize: p.coverImageSize,
+          tags: p.tags || [],
+          status: 'published' as const,
+          publishedAt: p.publishedAt || new Date().toISOString(),
+          createdAt: p.publishedAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          author,
+          notionId: p.notionId,
+          source: 'notion' as const,
+          categoryId: '',
+          scheduledAt: null,
+          readingTime: Math.ceil((p.content?.length || 0) / 1000), // Estimate
+        }));
     }
-
-    if (selectedTag) {
-      filtered = filtered.filter((post) =>
-        post.tags.some((tag) => tag.toLowerCase() === selectedTag.toLowerCase())
-      );
-    }
-
-    setFilteredPosts(filtered);
-  }, [searchQuery, selectedTag, posts]);
-
-  // Render theme-specific layout
-  if (theme === 'atavist') {
-    return <AtavistLayout posts={filteredPosts} isLoading={isLoading} />;
+  } catch (error) {
+    console.error('Error fetching Notion posts on server:', error);
   }
 
-  if (theme === 'supersimple') {
-    return <SupersimpleLayout posts={filteredPosts} isLoading={isLoading} />;
-  }
-
-  // Default: ezBlog1 layout
-  return (
-    <EzBlog1Layout
-      posts={posts}
-      filteredPosts={filteredPosts}
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      selectedTag={selectedTag}
-      setSelectedTag={setSelectedTag}
-      isLoading={isLoading}
-    />
-  );
+  // Pass initial posts to client component
+  return <HomeClient initialPosts={notionPosts} />;
 }

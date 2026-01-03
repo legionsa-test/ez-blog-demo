@@ -80,6 +80,13 @@ export interface SiteSettings {
   notionPageUrl?: string;
   enableNotionSync?: boolean;
   showRssFeed?: boolean;
+  giscusConfig?: {
+    enabled: boolean;
+    repo: string;
+    repoId: string;
+    category: string;
+    categoryId: string;
+  };
 }
 
 export interface Page {

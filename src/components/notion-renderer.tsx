@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useRef, useMemo } from 'react';
 import { ExtendedRecordMap } from 'notion-types';
 
 // react-notion-x core styles
@@ -41,6 +42,70 @@ interface NotionPageRendererProps {
     className?: string;
 }
 
+// Custom Callout Component
+const CustomCallout = ({ block, children }: { block: any; children: React.ReactNode }) => {
+    const { format } = block;
+    const icon = format?.page_icon || '💡';
+
+    return (
+        <aside
+            className="callout my-4 rounded-lg border border-border p-4 bg-muted/30 flex items-start gap-3"
+        >
+            <span className="text-xl leading-6 select-none">{icon}</span>
+            <div className="flex-1 min-w-0 text-foreground">
+                {children}
+            </div>
+        </aside>
+    );
+};
+
+// Helper to fix specific embed URLs (specifically Figma)
+const fixEmbedUrls = (recordMap: ExtendedRecordMap) => {
+    if (!recordMap?.block) return recordMap;
+
+    const newRecordMap = { ...recordMap };
+    newRecordMap.block = { ...recordMap.block };
+
+    Object.keys(newRecordMap.block).forEach((blockId) => {
+        const block = newRecordMap.block[blockId].value;
+        if (!block) return;
+
+        if (block.type === 'embed' || block.type === 'figma' || (block as any).type === 'maps') {
+            const props = block.properties;
+            const format = block.format;
+            // Notion usually stores the URL in properties.source[0][0] or format.display_source
+            // But for Figma specifically, it sometimes uses format.uri
+            const source =
+                props?.source?.[0]?.[0] ||
+                format?.display_source ||
+                (block as any).format?.uri;
+
+            if (source && source.includes('figma.com') && !source.includes('embed_host')) {
+                // Construct fixed URL
+                const fixedUrl = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
+
+                // Mutate the block copy
+                newRecordMap.block[blockId] = {
+                    ...newRecordMap.block[blockId],
+                    value: {
+                        ...block,
+                        format: {
+                            ...block.format,
+                            display_source: fixedUrl, // Update for renderer
+                        },
+                        properties: {
+                            ...block.properties,
+                            source: [[fixedUrl]], // Update source property too just in case
+                        }
+                    }
+                };
+            }
+        }
+    });
+
+    return newRecordMap;
+};
+
 export function NotionPageRenderer({
     recordMap,
     rootPageId,
@@ -52,14 +117,59 @@ export function NotionPageRenderer({
     minTableOfContentsItems = 3,
     className = '',
 }: NotionPageRendererProps) {
-    if (!recordMap) {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Fix URLs once
+    const fixedRecordMap = useMemo(() => fixEmbedUrls(recordMap), [recordMap]);
+
+    // Apply code syntax highlighting after render
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        // Dynamically import Prism and highlight code blocks
+        const highlightCode = async () => {
+            try {
+                // Import Prism dynamically to avoid SSR issues
+                const Prism = (await import('prismjs')).default;
+
+                // Import common languages
+                await import('prismjs/components/prism-javascript');
+                await import('prismjs/components/prism-typescript');
+                await import('prismjs/components/prism-jsx');
+                await import('prismjs/components/prism-tsx');
+                await import('prismjs/components/prism-css');
+                await import('prismjs/components/prism-python');
+                await import('prismjs/components/prism-bash');
+                await import('prismjs/components/prism-json');
+                await import('prismjs/components/prism-yaml');
+                await import('prismjs/components/prism-markdown');
+                await import('prismjs/components/prism-sql');
+
+                // Find all code blocks and apply highlighting
+                const codeBlocks = containerRef.current?.querySelectorAll('pre code, .notion-code code');
+                if (codeBlocks && codeBlocks.length > 0) {
+                    codeBlocks.forEach((block) => {
+                        Prism.highlightElement(block as HTMLElement);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load Prism for syntax highlighting:', error);
+            }
+        };
+
+        // Delay to ensure react-notion-x has rendered
+        const timer = setTimeout(highlightCode, 500);
+        return () => clearTimeout(timer);
+    }, [fixedRecordMap]);
+
+    if (!fixedRecordMap) {
         return null;
     }
 
     return (
-        <div className={`notion-renderer-wrapper ${className}`}>
+        <div ref={containerRef} className={`notion-renderer-wrapper ${className}`}>
             <NotionRenderer
-                recordMap={recordMap}
+                recordMap={fixedRecordMap}
                 rootPageId={rootPageId}
                 fullPage={fullPage}
                 darkMode={darkMode}
@@ -72,6 +182,7 @@ export function NotionPageRenderer({
                     Modal,
                     nextImage: Image,
                     nextLink: Link,
+                    Callout: CustomCallout, // Pass custom Callout
                 }}
                 mapPageUrl={(pageId) => `/blog/${pageId}`}
             />

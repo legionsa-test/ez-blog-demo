@@ -503,8 +503,77 @@ function blocksToHtml(recordMap: any, pageId: string): string {
 
             // --- Table of Contents ---
             case 'table_of_contents': {
-                // TOC is generated dynamically; for static HTML, we output a placeholder or skip
-                return `<nav class="my-6 p-4 rounded-lg border border-border bg-muted/30"><p class="text-sm font-medium text-muted-foreground">Table of Contents</p><p class="text-xs text-muted-foreground mt-1">(Auto-generated in Notion)</p></nav>`;
+                // Generate a static HTML TOC by scanning the recordMap
+                const tocItems: { type: string; title: string; id: string; indent: number }[] = [];
+
+                if (recordMap?.block) {
+                    Object.values(recordMap.block).forEach((b: any) => {
+                        const val = b?.value;
+                        if (!val || val.parent_id !== pageId) return; // Only direct children of the page
+
+                        const type = val.type;
+                        if (['header', 'heading_1', 'sub_header', 'heading_2', 'sub_sub_header', 'heading_3'].includes(type)) {
+                            const titleText = extractText(val.properties?.title);
+                            if (titleText) {
+                                let indent = 0;
+                                if (type === 'sub_header' || type === 'heading_2') indent = 1;
+                                if (type === 'sub_sub_header' || type === 'heading_3') indent = 2;
+
+                                // Clean ID generation
+                                const id = titleText
+                                    .toLowerCase()
+                                    .replace(/[^a-z0-9]+/g, '-')
+                                    .replace(/(^-|-$)/g, '');
+
+                                tocItems.push({ type, title: titleText, id, indent });
+                            }
+                        }
+                    });
+                }
+
+                if (tocItems.length === 0) return '';
+
+                // Keep order based on block order? 
+                // Object.values doesn't guarantee order. We should rely on content array if possible.
+                // Re-scanning via content array is safer.
+
+                const orderedTocItems: { title: string; id: string; indent: number }[] = [];
+                const pageContent = recordMap.block[pageId]?.value?.content || [];
+
+                const processTocBlock = (blkId: string) => {
+                    const val = recordMap.block[blkId]?.value;
+                    if (!val) return;
+
+                    const type = val.type;
+                    if (['header', 'heading_1', 'sub_header', 'heading_2', 'sub_sub_header', 'heading_3'].includes(type)) {
+                        const titleText = extractText(val.properties?.title);
+                        if (titleText) {
+                            let indent = 0;
+                            if (type === 'sub_header' || type === 'heading_2') indent = 1;
+                            if (type === 'sub_sub_header' || type === 'heading_3') indent = 2;
+                            const id = titleText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                            orderedTocItems.push({ title: titleText, id, indent });
+                        }
+                    }
+
+                    // Recurse for nested blocks (handling sections, column lists etc if they contain headers)
+                    if (val.content) {
+                        val.content.forEach((childId: string) => processTocBlock(childId));
+                    }
+                };
+
+                pageContent.forEach((childId: string) => processTocBlock(childId));
+
+                if (orderedTocItems.length === 0) return '';
+
+                let tocHtml = '<nav class="my-6 p-4 rounded-lg border border-border bg-card"><p class="text-sm font-semibold mb-3">Table of Contents</p><ul class="space-y-1 text-sm">';
+                orderedTocItems.forEach(item => {
+                    const padding = item.indent * 16; // 0px, 16px, 32px
+                    tocHtml += `<li><a href="#${item.id}" class="block text-muted-foreground hover:text-primary transition-colors" style="padding-left: ${padding}px">${item.title}</a></li>`;
+                });
+                tocHtml += '</ul></nav>';
+
+                return tocHtml;
             }
 
             // --- Simple Tables ---
@@ -1018,4 +1087,17 @@ export async function fetchNotionContent() {
         }
         throw error;
     }
+}
+
+// Helper for Server Components to get all posts
+export async function getNotionPosts() {
+    const { posts } = await fetchNotionContent();
+    return posts;
+}
+
+// Helper for Server Components to get a specific page recordMap
+export async function getNotionPage(pageId: string) {
+    const notion = new NotionAPI();
+    const recordMap = await notion.getPage(pageId);
+    return recordMap;
 }

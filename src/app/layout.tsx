@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { LayoutWrapper } from '@/components/layout/layout-wrapper';
 import { Toaster } from '@/components/ui/sonner';
 import { I18nProvider } from '@/lib/i18n';
+import { Analytics } from '@vercel/analytics/react';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -81,6 +82,7 @@ export default function RootLayout({
               {children}
             </LayoutWrapper>
             <Toaster />
+            <Analytics />
           </I18nProvider>
         </ThemeProvider>
       </body>
