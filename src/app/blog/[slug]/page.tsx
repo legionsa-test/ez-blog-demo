@@ -127,6 +127,14 @@ export default function BlogPostPage() {
         loadPost();
     }, [slug]);
 
+    // Update document title when post loads
+    useEffect(() => {
+        if (post) {
+            const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE || 'ezBlog';
+            document.title = `${siteTitle} - ${post.title}`;
+        }
+    }, [post]);
+
     // Track reading progress
     useEffect(() => {
         if (!post) return;

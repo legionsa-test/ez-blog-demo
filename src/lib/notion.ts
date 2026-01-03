@@ -93,12 +93,18 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 return `<blockquote>${extractText(properties?.title)}</blockquote>`;
             case 'code':
                 return `<pre><code>${extractText(properties?.title)}</code></pre>`;
-            case 'image':
-                const imgSrc = format?.display_source || properties?.source?.[0]?.[0];
-                const imgCaption = extractText(properties?.caption);
+            case 'image': {
+                const imgSrc = format?.display_source || properties?.source?.[0]?.[0] || block?.source?.[0]?.[0];
+                // Try multiple places for caption/alt text
+                const imgCaption = extractText(properties?.caption) ||
+                    extractText(format?.caption) ||
+                    format?.block_caption ||
+                    extractText(block?.caption) ||
+                    '';
                 return imgSrc ?
-                    `<figure><img src="${imgSrc}" alt="${imgCaption || 'Image'}" /><figcaption>${imgCaption}</figcaption></figure>`
+                    `<figure><img src="${imgSrc}" alt="${imgCaption || 'Image'}" />${imgCaption ? `<figcaption>${imgCaption}</figcaption>` : ''}</figure>`
                     : '';
+            }
             case 'divider':
                 return '<hr />';
 
@@ -323,12 +329,17 @@ function blocksToHtml(recordMap: any, pageId: string): string {
 
     // Get page block and its content
     const pageBlock = blocks[pageId]?.value;
+    console.log('[blocksToHtml] Processing page:', pageId, '| Content blocks:', pageBlock?.content?.length || 0);
+
     if (pageBlock?.content) {
         for (const childId of pageBlock.content) {
+            const blockInfo = blocks[childId]?.value;
+            console.log('[blocksToHtml] Block:', childId.slice(0, 8), '| Type:', blockInfo?.type, '| Has format.uri:', !!blockInfo?.format?.uri);
             html += processBlock(childId);
         }
     }
 
+    console.log('[blocksToHtml] Final HTML length:', html.length, '| Contains figma:', html.includes('figma'));
     return sanitizeHtml(html, sanitizeConfig);
 }
 
