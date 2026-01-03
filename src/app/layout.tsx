@@ -62,10 +62,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        {/* Prism.js for code syntax highlighting */}
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" async></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js" async></script>
+        {/* Prism.js theme CSS is in globals.css - no CDN needed */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} min-h-screen bg-background font-sans antialiased`}
