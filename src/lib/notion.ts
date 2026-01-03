@@ -42,6 +42,23 @@ const sanitizeConfig = {
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowProtocolRelative: true,
+    // Allow iframes from trusted sources
+    allowedIframeHostnames: [
+        'www.figma.com',
+        'figma.com',
+        'www.youtube.com',
+        'youtube.com',
+        'www.youtube-nocookie.com',
+        'player.vimeo.com',
+        'vimeo.com',
+        'open.spotify.com',
+        'w.soundcloud.com',
+        'miro.com',
+        'www.google.com',
+        'maps.google.com',
+        'codepen.io',
+        'gist.github.com',
+    ],
 };
 
 // Helper to extract text from Notion properties
