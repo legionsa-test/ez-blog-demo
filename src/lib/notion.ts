@@ -17,28 +17,6 @@ let postsCache: any[] | null = null;
 let pagesCache: any[] | null = null;
 let lastFetchTime: number = 0;
 
-// ... (rest of file)
-
-return {
-    notionId: row.id,
-    title,
-    slug,
-    excerpt,
-    content,
-    coverImage,
-    coverImageSize,
-    coverImageAlt,
-    tags,
-    status: isPublished ? 'published' : 'draft',
-    publishedAt,
-    contentType,
-    // Author from Notion
-    authorName: authorName || undefined,
-    authorAvatar: authorAvatar || undefined,
-    // Debug info
-    _rawProperties: row.properties,
-};
-
 // Sanitize HTML config
 const sanitizeConfig = {
     allowedTags: [
