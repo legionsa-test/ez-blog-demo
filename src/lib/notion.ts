@@ -171,10 +171,12 @@ function blocksToHtml(recordMap: any, pageId: string): string {
             case 'mural':
             case 'loom': {
                 // Try multiple possible locations for the embed URL
+                // IMPORTANT: format.uri is used by Figma embeds!
                 const source =
                     properties?.source?.[0]?.[0] ||
                     format?.display_source ||
                     format?.source ||
+                    format?.uri ||
                     block?.source?.[0]?.[0] ||
                     properties?.link?.[0]?.[0];
 
