@@ -1,5 +1,3 @@
-'use client';
-
 import { Author } from './types';
 
 const AUTHORS_KEY = 'ezblog_authors';
@@ -44,7 +42,19 @@ export function getAuthorById(id: string): Author | null {
 // Priority: 1. Environment variables (production)
 //          2. localStorage (local development)
 //          3. Default values
+// NOTE: This function is server-safe - on server it returns env vars only
 export function getPrimaryAuthor(): Author {
+    // On server, only use environment variables
+    if (typeof window === 'undefined') {
+        return {
+            id: 'default',
+            name: process.env.NEXT_PUBLIC_AUTHOR_NAME || 'Admin',
+            avatar: process.env.NEXT_PUBLIC_AUTHOR_AVATAR || '/avatar.svg',
+            bio: process.env.NEXT_PUBLIC_AUTHOR_BIO || 'Blog administrator',
+        };
+    }
+
+    // On client, also check localStorage
     const authors = getAuthors();
     const localAuthor = authors[0] || defaultAuthor;
 
