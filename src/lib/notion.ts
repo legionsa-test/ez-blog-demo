@@ -401,11 +401,15 @@ function extractDatabaseRows(recordMap: any): any[] {
             }
         }
 
+        // Debug log to trace row extraction
+        console.log('[Notion ExtractRow]', row.properties.title ? `OK: ${row.properties.title}` : `FILTERED: No title found, raw props: ${JSON.stringify(Object.keys(properties))}`);
+
         if (row.properties.title) {
             rows.push(row);
         }
     }
 
+    console.log('[Notion ExtractRows] Total rows extracted:', rows.length);
     return rows;
 }
 
@@ -467,6 +471,9 @@ export async function fetchNotionData(pageUrl: string) {
                 const statusValue = String(props.status || '').toLowerCase();
                 const isPublished = statusValue === 'published' || props.published === true;
 
+                // Debug log to trace content processing
+                console.log('[Notion Debug]', title, '| Type:', typeValue, '| Status:', statusValue, '| Published:', isPublished, '| ContentType:', contentType);
+
                 const excerpt = props.summary || props.excerpt || props.description ||
                     props.subtitle || props.intro || '';
 
@@ -510,8 +517,8 @@ export async function fetchNotionData(pageUrl: string) {
                     publishedAt,
                     contentType,
                 };
-            } catch (e) {
-                console.error('Error fetching page content:', row.id, e);
+            } catch (e: any) {
+                console.error('[Notion Error] Failed to process row:', row.id, '| Title:', row.properties?.title, '| Error:', e?.message || e);
                 return null;
             }
         })
