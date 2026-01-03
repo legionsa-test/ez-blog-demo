@@ -19,9 +19,10 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params; // Await the params Promise (Next.js 15+)
     const posts = await getNotionPosts();
-    const post = posts.find((p: any) => p.slug === params.slug && p.status === 'published');
+    const post = posts.find((p: any) => p.slug === slug && p.status === 'published');
 
     if (!post) {
         return {
@@ -61,8 +62,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     };
 }
 
-export default async function Page({ params }: { params: { slug: string } }) {
-    const { slug } = params;
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params; // Await the params Promise (Next.js 15+)
     const allNotionPosts = await getNotionPosts();
     const notionPost = allNotionPosts.find((p: any) => p.slug === slug && p.status === 'published');
 
