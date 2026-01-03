@@ -893,6 +893,42 @@ function extractDatabaseRows(recordMap: any): any[] {
                         row.properties[propName] = value[0][1][0][1];
                     }
                     break;
+                case 'created_by':
+                case 'last_edited_by':
+                case 'person':
+                    // Extract user name from person/created_by property
+                    // Format can be: [[user_id, [["p", user_id, "notion_user"]]]]
+                    // or stored in recordMap.notion_user
+                    if (value?.[0]?.[1]?.[0]) {
+                        const userRef = value[0][1][0];
+                        if (userRef[0] === 'p' && userRef[1]) {
+                            const userId = userRef[1];
+                            // Try to get user from recordMap
+                            const notionUsers = recordMap.notion_user || {};
+                            const userRecord = (notionUsers as any)[userId]?.value;
+                            if (userRecord) {
+                                row.properties[propName] = userRecord.name || userRecord.given_name || 'Unknown';
+                                // Also store avatar if available
+                                if (userRecord.profile_photo) {
+                                    row.properties[`${propName}_avatar`] = userRecord.profile_photo;
+                                }
+                            } else {
+                                row.properties[propName] = 'Author';
+                            }
+                        }
+                    } else if (block.created_by_id && def.type === 'created_by') {
+                        // Fallback: try block.created_by_id
+                        const userId = block.created_by_id;
+                        const notionUsers = recordMap.notion_user || {};
+                        const userRecord = (notionUsers as any)[userId]?.value;
+                        if (userRecord) {
+                            row.properties[propName] = userRecord.name || userRecord.given_name || 'Unknown';
+                            if (userRecord.profile_photo) {
+                                row.properties[`${propName}_avatar`] = userRecord.profile_photo;
+                            }
+                        }
+                    }
+                    break;
             }
         }
 
@@ -1017,6 +1053,12 @@ export async function fetchNotionData(pageUrl: string) {
                     props['heroalttext'] || props['hero_alt_text'] ||
                     props['alt text'] || props['alttext'] || '';
 
+                // Extract Author from 'Created by' or 'Author' property
+                const authorName = props['created by'] || props['createdby'] ||
+                    props['created_by'] || props['author'] || '';
+                const authorAvatar = props['created by_avatar'] || props['createdby_avatar'] ||
+                    props['created_by_avatar'] || props['author_avatar'] || '';
+
                 return {
                     notionId: row.id,
                     title,
@@ -1030,6 +1072,9 @@ export async function fetchNotionData(pageUrl: string) {
                     status: isPublished ? 'published' : 'draft',
                     publishedAt,
                     contentType,
+                    // Author from Notion
+                    authorName: authorName || undefined,
+                    authorAvatar: authorAvatar || undefined,
                 };
             } catch (e: any) {
                 console.error('[Notion Error] Failed to process row:', row.id, '| Title:', row.properties?.title, '| Error:', e?.message || e);
