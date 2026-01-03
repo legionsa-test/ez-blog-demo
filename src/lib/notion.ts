@@ -9,13 +9,35 @@ const notion = new NotionAPI({
     authToken: process.env.NOTION_TOKEN_V2 || process.env.NOTION_AUTH_TOKEN
 });
 
-// Cache duration in seconds (5 minutes)
-const REVALIDATE_SECONDS = 300;
+// Cache duration in seconds (1 second for debugging)
+const REVALIDATE_SECONDS = 1;
 
 // In-memory cache
 let postsCache: any[] | null = null;
 let pagesCache: any[] | null = null;
 let lastFetchTime: number = 0;
+
+// ... (rest of file)
+
+return {
+    notionId: row.id,
+    title,
+    slug,
+    excerpt,
+    content,
+    coverImage,
+    coverImageSize,
+    coverImageAlt,
+    tags,
+    status: isPublished ? 'published' : 'draft',
+    publishedAt,
+    contentType,
+    // Author from Notion
+    authorName: authorName || undefined,
+    authorAvatar: authorAvatar || undefined,
+    // Debug info
+    _rawProperties: row.properties,
+};
 
 // Sanitize HTML config
 const sanitizeConfig = {
@@ -1097,6 +1119,8 @@ export async function fetchNotionData(pageUrl: string) {
                     // Author from Notion
                     authorName: authorName || undefined,
                     authorAvatar: authorAvatar || undefined,
+                    // Debug info
+                    _rawProperties: row.properties,
                 };
             } catch (e: any) {
                 console.error('[Notion Error] Failed to process row:', row.id, '| Title:', row.properties?.title, '| Error:', e?.message || e);
