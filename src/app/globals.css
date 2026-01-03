@@ -358,3 +358,184 @@
   margin-right: calc(-50vw + 50%);
   border-radius: 0;
 }
+
+/* ========================================
+   react-notion-x Overrides
+   Use theme fonts and colors
+   ======================================== */
+
+/* Base notion styles - inherit theme fonts */
+.notion,
+.notion-page,
+.notion-text,
+.notion-h1,
+.notion-h2,
+.notion-h3,
+.notion-list,
+.notion-callout-text,
+.notion-toggle,
+.notion-quote {
+  font-family: inherit !important;
+  color: var(--foreground) !important;
+}
+
+/* Dark mode support for react-notion-x */
+.dark .notion,
+.dark .notion-page {
+  color: var(--foreground) !important;
+}
+
+.dark .notion-text,
+.dark .notion-h1,
+.dark .notion-h2,
+.dark .notion-h3,
+.dark .notion-list,
+.dark .notion-callout-text,
+.dark .notion-toggle,
+.dark .notion-quote {
+  color: var(--foreground) !important;
+}
+
+/* Notion headings - match theme */
+.notion-h1,
+.notion-h2,
+.notion-h3 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  scroll-margin-top: 6rem;
+}
+
+.notion-h1 {
+  font-size: 2rem;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.notion-h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.notion-h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Notion links - use primary color */
+.notion-link {
+  color: var(--primary) !important;
+  text-decoration: none;
+}
+
+.notion-link:hover {
+  text-decoration: underline;
+}
+
+/* Notion code blocks */
+.notion-code {
+  background: var(--muted) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0.5rem;
+  font-family: var(--font-mono), monospace !important;
+}
+
+.dark .notion-code {
+  background: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+/* Notion callout */
+.notion-callout {
+  background: var(--muted) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0.5rem;
+}
+
+/* Notion quote */
+.notion-quote {
+  border-left: 3px solid var(--primary);
+  background: var(--muted);
+  padding: 0.5rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* Notion table */
+.notion-table,
+.notion-simple-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.notion-table th,
+.notion-table td,
+.notion-simple-table th,
+.notion-simple-table td {
+  border: 1px solid var(--border) !important;
+  padding: 0.5rem 0.75rem;
+}
+
+.notion-table th,
+.notion-simple-table th {
+  background: var(--muted) !important;
+  font-weight: 600;
+}
+
+/* Notion toggle */
+.notion-toggle {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+}
+
+/* Notion images */
+.notion-asset-wrapper img {
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Notion divider */
+.notion-hr {
+  border-color: var(--border) !important;
+}
+
+/* Notion embeds - ensure proper styling */
+.notion-asset-wrapper iframe {
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+/* Hide notion page title/icon (we render our own) */
+.notion-title,
+.notion-page-icon-hero {
+  display: none !important;
+}
+
+/* Notion to-do checkboxes */
+.notion-to-do {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.notion-to-do-checked {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Column layouts */
+.notion-column-block {
+  padding-right: 1rem;
+}
+
+/* Ensure proper spacing */
+.notion-renderer-wrapper {
+  line-height: 1.75;
+}
+
+.notion-renderer-wrapper>* {
+  margin-bottom: 1rem;
+}

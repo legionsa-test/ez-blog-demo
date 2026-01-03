@@ -15,6 +15,7 @@ import { ReadingProgress } from '@/components/reading-progress';
 import { ShareButtons } from '@/components/share-buttons';
 import { ImageLightbox, useLightbox } from '@/components/image-lightbox';
 import { NotionPageRenderer } from '@/components/notion-renderer';
+import { NotionTableOfContents } from '@/components/notion-table-of-contents';
 import { getPostBySlug, getPublishedPosts } from '@/lib/storage';
 import { incrementViewCount, getViewCount, updateReadingHistory } from '@/lib/analytics';
 import { generatePostJsonLd, generateBreadcrumbJsonLd } from '@/lib/json-ld';
@@ -328,7 +329,7 @@ export default function BlogPostPage() {
                             </Button>
                             {showMobileToc && (
                                 <div className="mt-4 rounded-lg border border-border bg-card p-4">
-                                    <TableOfContents content={post.content} />
+                                    {recordMap ? <NotionTableOfContents /> : <TableOfContents content={post.content} />}
                                 </div>
                             )}
                         </div>
@@ -336,7 +337,7 @@ export default function BlogPostPage() {
                         {/* Desktop TOC Sidebar - Left */}
                         <aside className="hidden lg:col-span-3 lg:block">
                             <div className="sticky top-24">
-                                <TableOfContents content={post.content} />
+                                {recordMap ? <NotionTableOfContents /> : <TableOfContents content={post.content} />}
 
                                 {/* Share buttons in sidebar */}
                                 <div className="mt-8 pt-8 border-t border-border">
