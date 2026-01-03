@@ -14,12 +14,14 @@ import { TableOfContents } from '@/components/table-of-contents';
 import { ReadingProgress } from '@/components/reading-progress';
 import { ShareButtons } from '@/components/share-buttons';
 import { ImageLightbox, useLightbox } from '@/components/image-lightbox';
+import { NotionPageRenderer } from '@/components/notion-renderer';
 import { getPostBySlug, getPublishedPosts } from '@/lib/storage';
 import { incrementViewCount, getViewCount, updateReadingHistory } from '@/lib/analytics';
 import { generatePostJsonLd, generateBreadcrumbJsonLd } from '@/lib/json-ld';
 import { getPrimaryAuthor } from '@/lib/authors';
 import { Post } from '@/lib/types';
 import { format } from 'date-fns';
+import type { ExtendedRecordMap } from 'notion-types';
 
 // Add IDs to headings in HTML content
 function addHeadingIds(html: string): string {
@@ -44,6 +46,8 @@ export default function BlogPostPage() {
     const [notFound, setNotFound] = useState(false);
     const [showMobileToc, setShowMobileToc] = useState(false);
     const [viewCount, setViewCount] = useState(0);
+    const [recordMap, setRecordMap] = useState<ExtendedRecordMap | null>(null);
+    const [notionId, setNotionId] = useState<string | null>(null);
     const { lightboxImage, closeLightbox } = useLightbox();
 
     useEffect(() => {
@@ -87,6 +91,21 @@ export default function BlogPostPage() {
                     // Notion is the source, don't check localStorage
                     if (foundPost) {
                         setPost(foundPost);
+                        setNotionId(foundPost.notionId || null);
+
+                        // Fetch recordMap for react-notion-x rendering
+                        if (foundPost.notionId) {
+                            try {
+                                const pageResponse = await fetch(`/api/notion/page/${foundPost.notionId}`);
+                                const pageData = await pageResponse.json();
+                                if (pageData.success && pageData.recordMap) {
+                                    setRecordMap(pageData.recordMap);
+                                }
+                            } catch (err) {
+                                console.error('Error fetching recordMap:', err);
+                            }
+                        }
+
                         const count = incrementViewCount(slug);
                         setViewCount(count);
                     } else {
@@ -328,8 +347,19 @@ export default function BlogPostPage() {
 
                         {/* Main Content - Right */}
                         <div className="lg:col-span-9">
-                            <div
-                                className="prose prose-lg max-w-none dark:prose-invert 
+                            {/* Use NotionPageRenderer for Notion content when recordMap is available */}
+                            {recordMap ? (
+                                <NotionPageRenderer
+                                    recordMap={recordMap}
+                                    rootPageId={notionId || undefined}
+                                    fullPage={false}
+                                    darkMode={false}
+                                    previewImages={true}
+                                    className="notion-content"
+                                />
+                            ) : (
+                                <div
+                                    className="prose prose-lg max-w-none dark:prose-invert 
                 prose-headings:font-bold prose-headings:tracking-tight prose-headings:scroll-mt-24
                 prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-6
                 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-4
@@ -340,8 +370,9 @@ export default function BlogPostPage() {
                 prose-blockquote:border-l-primary prose-blockquote:bg-muted/50 prose-blockquote:py-1 prose-blockquote:rounded-r-lg
                 prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
                 prose-pre:bg-muted prose-pre:border prose-pre:border-border"
-                                dangerouslySetInnerHTML={{ __html: contentWithIds }}
-                            />
+                                    dangerouslySetInnerHTML={{ __html: contentWithIds }}
+                                />
+                            )}
 
                             {/* Bottom Navigation - Aligned with content */}
                             <div className="mt-8 border-b border-border/40 pb-6">
