@@ -3,14 +3,10 @@ import { NotionAPI } from 'notion-client';
 import sanitizeHtml from 'sanitize-html';
 
 // Create Notion client
-// Create Notion client
-// Initialize with authToken if available to fetch user data
-const notion = new NotionAPI({
-    authToken: process.env.NOTION_TOKEN_V2 || process.env.NOTION_AUTH_TOKEN
-});
+const notion = new NotionAPI();
 
-// Cache duration in seconds (1 second for debugging)
-const REVALIDATE_SECONDS = 1;
+// Cache duration in seconds (5 minutes)
+const REVALIDATE_SECONDS = 300;
 
 // In-memory cache
 let postsCache: any[] | null = null;
@@ -901,37 +897,34 @@ function extractDatabaseRows(recordMap: any): any[] {
                 case 'last_edited_by':
                 case 'person':
                     // Extract user name from person/created_by property
-                    // Format 1: [[user_id, [["p", user_id, "notion_user"]]]] or [["‣", [["u", user_id]]]]
-                    // Format 2: [[user_id]] (Simple ID)
-
-                    let userId = '';
-
-                    // Try to find user ID in value structure
-                    if (value?.[0]?.[1]?.[0]?.[1]) {
-                        // Complex format: value[0][1][0] is ["p"|"u", id]
-                        userId = value[0][1][0][1];
-                    } else if (value?.[0]?.[0] && typeof value[0][0] === 'string' && value[0][0].length > 20) {
-                        // Simple format: value[0][0] is the ID (checking length to avoid "Yes" etc)
-                        userId = value[0][0];
-                    } else if (def.type === 'created_by' && block.created_by_id) {
-                        // Fallback to block metadata
-                        userId = block.created_by_id;
-                    }
-
-                    if (userId) {
+                    // Format can be: [[user_id, [["p", user_id, "notion_user"]]]]
+                    // or stored in recordMap.notion_user
+                    if (value?.[0]?.[1]?.[0]) {
+                        const userRef = value[0][1][0];
+                        if (userRef[0] === 'p' && userRef[1]) {
+                            const userId = userRef[1];
+                            // Try to get user from recordMap
+                            const notionUsers = recordMap.notion_user || {};
+                            const userRecord = (notionUsers as any)[userId]?.value;
+                            if (userRecord) {
+                                row.properties[propName] = userRecord.name || userRecord.given_name || 'Unknown';
+                                // Also store avatar if available
+                                if (userRecord.profile_photo) {
+                                    row.properties[`${propName}_avatar`] = userRecord.profile_photo;
+                                }
+                            } else {
+                                row.properties[propName] = 'Author';
+                            }
+                        }
+                    } else if (block.created_by_id && def.type === 'created_by') {
+                        // Fallback: try block.created_by_id
+                        const userId = block.created_by_id;
                         const notionUsers = recordMap.notion_user || {};
                         const userRecord = (notionUsers as any)[userId]?.value;
-
                         if (userRecord) {
                             row.properties[propName] = userRecord.name || userRecord.given_name || 'Unknown';
                             if (userRecord.profile_photo) {
                                 row.properties[`${propName}_avatar`] = userRecord.profile_photo;
-                            }
-                        } else {
-                            // If user not in recordMap, try to use the name if it was embedded in the property 
-                            // (sometimes person property include name in the text part)
-                            if (value?.[0]?.[0] && value[0][0].length < 50 && value[0][0] !== '‣') {
-                                row.properties[propName] = value[0][0];
                             }
                         }
                     }
@@ -1097,8 +1090,6 @@ export async function fetchNotionData(pageUrl: string) {
                     // Author from Notion
                     authorName: authorName || undefined,
                     authorAvatar: authorAvatar || undefined,
-                    // Debug info
-                    _rawProperties: row.properties,
                 };
             } catch (e: any) {
                 console.error('[Notion Error] Failed to process row:', row.id, '| Title:', row.properties?.title, '| Error:', e?.message || e);
@@ -1111,7 +1102,6 @@ export async function fetchNotionData(pageUrl: string) {
     return {
         posts: validItems.filter((item: any) => item.contentType === 'post'),
         pages: validItems.filter((item: any) => item.contentType === 'page'),
-        recordMap, // Included for debugging author data
     };
 }
 
