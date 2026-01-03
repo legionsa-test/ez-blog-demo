@@ -8,6 +8,12 @@ Write in Notion, see it on your blog instantly. Fork, deploy to Vercel, and you'
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
+### ⚡ Lighthouse Scores
+
+| Performance | Accessibility | Best Practices | SEO |
+|:-----------:|:-------------:|:--------------:|:---:|
+| 🟢 97 | 🟢 100 | 🟢 100 | 🟢 100 |
+
 🔗 **[Live Demo](https://ez-blog-demo.vercel.app/)** | 📖 [Documentation](#-configuration) | 🚀 [Quick Start](#-quick-start)
 
 ---

@@ -418,30 +418,6 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Author Profile</CardTitle>
-                    <CardDescription>
-                        Author information displayed on blog posts. Set via environment variables:
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid gap-2 font-mono text-xs">
-                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                            <span className="text-muted-foreground">NEXT_PUBLIC_AUTHOR_NAME</span>
-                            <span className="text-primary font-semibold">{author.name}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                            <span className="text-muted-foreground">NEXT_PUBLIC_AUTHOR_AVATAR</span>
-                            <span className="text-primary font-semibold truncate max-w-[200px]">{author.avatar}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                            <span className="text-muted-foreground">NEXT_PUBLIC_AUTHOR_BIO</span>
-                            <span className="text-primary font-semibold truncate max-w-[200px]">{author.bio || '(not set)'}</span>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
 
             {/* Data Management */}
             <Card>

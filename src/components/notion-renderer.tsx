@@ -109,7 +109,7 @@ const CustomEmbed = ({ block }: { block: any }) => {
     );
 };
 
-// Helper to fix specific embed URLs (specifically Figma)
+// Helper to fix specific embed URLs (Figma and Google Maps)
 const fixEmbedUrls = (recordMap: ExtendedRecordMap) => {
     if (!recordMap?.block) return recordMap;
 
@@ -131,16 +131,60 @@ const fixEmbedUrls = (recordMap: ExtendedRecordMap) => {
             const format = block.format as any; // Use 'any' for flexible Notion format structure
 
             // Check multiple locations for the URL
-            const source =
+            let source =
                 props?.source?.[0]?.[0] ||
                 format?.display_source ||
                 format?.uri ||
                 format?.original_url;
 
-            if (source && source.includes('figma.com') && !source.includes('embed_host')) {
-                // Construct fixed URL
-                const fixedUrl = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
+            if (!source) return;
 
+            let fixedUrl = source;
+            let needsFix = false;
+
+            // Fix Figma URLs
+            if (source.includes('figma.com') && !source.includes('embed_host')) {
+                fixedUrl = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
+                needsFix = true;
+            }
+
+            // Fix Google Maps URLs - convert standard maps URLs to embed format
+            // Standard: https://www.google.com/maps/place/...
+            // Embed: https://www.google.com/maps/embed?pb=... or /maps/embed/v1/...
+            if (source.includes('google.com/maps') && !source.includes('/maps/embed')) {
+                // Extract place/location data and create embed URL
+                // For place URLs, we can use the "q" parameter approach
+                try {
+                    const url = new URL(source);
+                    const pathParts = url.pathname.split('/');
+                    const placeIndex = pathParts.indexOf('place');
+
+                    if (placeIndex !== -1 && pathParts[placeIndex + 1]) {
+                        // Extract place name
+                        const placeName = decodeURIComponent(pathParts[placeIndex + 1].replace(/\+/g, ' '));
+                        // Use embed format with place query
+                        fixedUrl = `https://www.google.com/maps?q=${encodeURIComponent(placeName)}&output=embed`;
+                        needsFix = true;
+                    } else if (url.pathname.includes('@')) {
+                        // Coordinate-based URL like /maps/@37.5668451,127.007578,17z
+                        const coordMatch = url.pathname.match(/@([\d.-]+),([\d.-]+)/);
+                        if (coordMatch) {
+                            fixedUrl = `https://www.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&output=embed`;
+                            needsFix = true;
+                        }
+                    } else {
+                        // Fallback: just append output=embed for simple cases
+                        fixedUrl = source.includes('?')
+                            ? `${source}&output=embed`
+                            : `${source}?output=embed`;
+                        needsFix = true;
+                    }
+                } catch (e) {
+                    console.log('[NotionRenderer] Failed to parse Google Maps URL:', source);
+                }
+            }
+
+            if (needsFix) {
                 // Mutate the block copy
                 (newRecordMap.block as any)[blockId] = {
                     ...blockWrapper,
@@ -162,6 +206,7 @@ const fixEmbedUrls = (recordMap: ExtendedRecordMap) => {
 
     return newRecordMap;
 };
+
 
 export function NotionPageRenderer({
     recordMap,
