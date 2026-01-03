@@ -63,6 +63,25 @@ export default function DebugNotionPage() {
                     </div>
 
                     <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded overflow-auto max-h-[500px]">
+                        <h2 className="font-bold mb-2">First Post Raw Properties</h2>
+                        <pre className="text-xs font-mono whitespace-pre-wrap">
+                            {data.recordMap ? (() => {
+                                // Find the first page block that is a post
+                                const blockId = data.posts?.[0]?.notionId;
+                                const block = data.recordMap.block?.[blockId]?.value;
+                                return JSON.stringify(block?.properties || {}, null, 2);
+                            })() : 'No recordMap'}
+                        </pre>
+                    </div>
+
+                    <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded overflow-auto max-h-[500px]">
+                        <h2 className="font-bold mb-2">First Post Processed</h2>
+                        <pre className="text-xs font-mono whitespace-pre-wrap">
+                            {JSON.stringify(data.posts?.[0] || {}, null, 2)}
+                        </pre>
+                    </div>
+
+                    <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded overflow-auto max-h-[500px]">
                         <h2 className="font-bold mb-2">First Post Author Data</h2>
                         <pre className="text-xs font-mono">
                             {data.posts?.[0] ? JSON.stringify({

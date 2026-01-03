@@ -3,7 +3,11 @@ import { NotionAPI } from 'notion-client';
 import sanitizeHtml from 'sanitize-html';
 
 // Create Notion client
-const notion = new NotionAPI();
+// Create Notion client
+// Initialize with authToken if available to fetch user data
+const notion = new NotionAPI({
+    authToken: process.env.NOTION_TOKEN_V2 || process.env.NOTION_AUTH_TOKEN
+});
 
 // Cache duration in seconds (5 minutes)
 const REVALIDATE_SECONDS = 300;
@@ -1105,6 +1109,7 @@ export async function fetchNotionData(pageUrl: string) {
     return {
         posts: validItems.filter((item: any) => item.contentType === 'post'),
         pages: validItems.filter((item: any) => item.contentType === 'page'),
+        recordMap, // Included for debugging author data
     };
 }
 
