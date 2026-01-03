@@ -44,20 +44,38 @@ const sanitizeConfig = {
     allowProtocolRelative: true,
     // Allow iframes from trusted sources
     allowedIframeHostnames: [
-        'www.figma.com',
-        'figma.com',
-        'www.youtube.com',
-        'youtube.com',
-        'www.youtube-nocookie.com',
-        'player.vimeo.com',
-        'vimeo.com',
-        'open.spotify.com',
-        'w.soundcloud.com',
-        'miro.com',
-        'www.google.com',
-        'maps.google.com',
-        'codepen.io',
-        'gist.github.com',
+        // Design & Prototyping
+        'www.figma.com', 'figma.com',
+        'www.canva.com', 'canva.com',
+        'excalidraw.com',
+        // Video
+        'www.youtube.com', 'youtube.com', 'www.youtube-nocookie.com',
+        'player.vimeo.com', 'vimeo.com',
+        'www.loom.com', 'loom.com',
+        // Audio
+        'open.spotify.com', 'w.soundcloud.com',
+        // Collaboration
+        'miro.com', 'www.miro.com',
+        'whimsical.com', 'www.whimsical.com',
+        'www.lucidchart.com', 'lucidchart.com',
+        // Google
+        'www.google.com', 'maps.google.com', 'docs.google.com', 'drive.google.com',
+        // Code
+        'codepen.io', 'gist.github.com', 'codesandbox.io',
+        // Social
+        'twitter.com', 'platform.twitter.com', 'publish.twitter.com',
+        // Forms & Surveys
+        'typeform.com', 'www.typeform.com',
+        'tally.so', 'airtable.com',
+        // Project Management
+        'trello.com', 'www.trello.com',
+        'asana.com', 'app.asana.com',
+        'app.clickup.com', 'clickup.com',
+        'notion.so', 'www.notion.so',
+        // Documents
+        'onedrive.live.com', 'www.dropbox.com',
+        // Misc
+        'calendly.com', 'www.calendly.com',
     ],
 };
 
@@ -106,6 +124,14 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 return `<li>${extractText(properties?.title)}</li>`;
             case 'numbered_list':
                 return `<li>${extractText(properties?.title)}</li>`;
+            case 'to_do': {
+                const todoText = extractText(properties?.title);
+                const checked = properties?.checked?.[0]?.[0] === 'Yes';
+                return `<div class="flex items-start gap-2 my-1">
+                    <input type="checkbox" ${checked ? 'checked' : ''} disabled class="mt-1 rounded" />
+                    <span class="${checked ? 'line-through text-muted-foreground' : ''}">${todoText}</span>
+                </div>`;
+            }
             case 'quote':
                 return `<blockquote>${extractText(properties?.title)}</blockquote>`;
             case 'code':
@@ -119,7 +145,7 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                     extractText(block?.caption) ||
                     '';
                 return imgSrc ?
-                    `<figure><img src="${imgSrc}" alt="${imgCaption || 'Image'}" />${imgCaption ? `<figcaption>${imgCaption}</figcaption>` : ''}</figure>`
+                    `<figure><img src="${imgSrc}" alt="${imgCaption}" />${imgCaption ? `<figcaption>${imgCaption}</figcaption>` : ''}</figure>`
                     : '';
             }
             case 'divider':
@@ -291,18 +317,52 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 return `<nav class="my-6 p-4 rounded-lg border border-border bg-muted/30"><p class="text-sm font-medium text-muted-foreground">Table of Contents</p><p class="text-xs text-muted-foreground mt-1">(Auto-generated in Notion)</p></nav>`;
             }
 
-            // --- Tables / Collection Views ---
-            case 'table':
-            case 'collection_view':
-            case 'collection_view_page': {
-                // Notion tables are complex; we render a simplified version or link
+            // --- Simple Tables ---
+            case 'table': {
+                // Check if this is a simple table (has table_row children) or a collection view
                 const collectionId = format?.collection_id;
                 if (collectionId) {
-                    // We can't fully render inline databases in static HTML without additional API calls
-                    // Output a styled placeholder linking to the Notion page
+                    // Collection view - render placeholder
                     return `<div class="my-4 p-4 rounded-lg border border-border bg-muted/30 text-center"><p class="text-sm text-muted-foreground">📊 This content contains an embedded database.</p><p class="text-xs text-muted-foreground mt-1">View in Notion for the full interactive experience.</p></div>`;
                 }
-                return '';
+
+                // Simple table - render as HTML table
+                const tableContent = block.content || [];
+                if (tableContent.length === 0) return '';
+
+                let tableHtml = '<div class="my-4 overflow-x-auto"><table class="w-full border-collapse border border-border rounded-lg overflow-hidden">';
+                const hasColumnHeader = format?.table_block_column_header;
+                const hasRowHeader = format?.table_block_row_header;
+
+                tableContent.forEach((rowId: string, rowIndex: number) => {
+                    const rowBlock = blocks[rowId]?.value;
+                    if (!rowBlock || rowBlock.type !== 'table_row') return;
+
+                    const cells = rowBlock.properties?.cells || [];
+                    const isHeaderRow = hasColumnHeader && rowIndex === 0;
+
+                    tableHtml += '<tr class="border-b border-border">';
+                    cells.forEach((cell: any, cellIndex: number) => {
+                        const cellText = extractText(cell) || '';
+                        const isHeaderCell = isHeaderRow || (hasRowHeader && cellIndex === 0);
+                        const cellTag = isHeaderCell ? 'th' : 'td';
+                        const cellClass = isHeaderCell
+                            ? 'bg-muted/50 p-3 text-left font-medium text-sm'
+                            : 'p-3 text-sm';
+                        tableHtml += `<${cellTag} class="${cellClass} border-r border-border last:border-r-0">${cellText}</${cellTag}>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+
+                tableHtml += '</table></div>';
+                return tableHtml;
+            }
+
+            // --- Collection Views (Databases) ---
+            case 'collection_view':
+            case 'collection_view_page': {
+                // Notion databases are complex; we render a placeholder
+                return `<div class="my-4 p-4 rounded-lg border border-border bg-muted/30 text-center"><p class="text-sm text-muted-foreground">📊 This content contains an embedded database.</p><p class="text-xs text-muted-foreground mt-1">View in Notion for the full interactive experience.</p></div>`;
             }
 
             // --- Callout (enhanced) ---
@@ -313,11 +373,81 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 return `<aside class="my-4 flex items-start gap-3 rounded-lg border border-border p-4 bg-muted/30"><span class="text-xl">${icon}</span><div class="flex-1 text-sm">${text}</div></aside>`;
             }
 
-            // --- Toggle (collapsible) ---
+            // --- Block Equation ---
+            case 'equation': {
+                const expression = properties?.title?.[0]?.[0] || '';
+                return `<div class="my-4 p-4 bg-muted/50 rounded-lg text-center font-mono overflow-x-auto">${expression}</div>`;
+            }
+
+            // --- Link to Page / Page Mention ---
+            case 'link_to_page':
+            case 'alias': {
+                const linkedPageId = format?.alias_pointer?.id || block.page_id || '';
+                const linkedPage = blocks[linkedPageId]?.value;
+                const pageTitle = extractText(linkedPage?.properties?.title) || 'Linked Page';
+                const pageIcon = linkedPage?.format?.page_icon || '📄';
+                // Create a styled link that will open in new tab with external link styling
+                return `<a href="https://notion.so/${linkedPageId.replace(/-/g, '')}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 my-2 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-sm">
+                    <span>${pageIcon}</span>
+                    <span>${pageTitle}</span>
+                    <span class="text-muted-foreground">↗</span>
+                </a>`;
+            }
+
+            // --- Synced Block (transclusion) ---
+            case 'transclusion_container':
+            case 'transclusion_reference': {
+                // Process synced block children
+                let syncedContent = '';
+                if (block.content) {
+                    block.content.forEach((childId: string) => {
+                        syncedContent += processBlock(childId);
+                    });
+                }
+                return syncedContent;
+            }
+
+            // --- Breadcrumb (skip - not meaningful in blog) ---
+            case 'breadcrumb': {
+                return '';
+            }
+
+            // --- Toggle (collapsible with children) ---
             case 'toggle': {
                 const title = extractText(properties?.title);
-                // Toggles have children, but we'd need to recursively process. For now, just show the title.
-                return `<details class="my-4 rounded-lg border border-border p-4 bg-card"><summary class="font-medium cursor-pointer">${title}</summary><div class="mt-2 text-sm text-muted-foreground">(Expand in Notion to see content)</div></details>`;
+                let childrenHtml = '';
+                if (block.content && block.content.length > 0) {
+                    block.content.forEach((childId: string) => {
+                        childrenHtml += processBlock(childId);
+                    });
+                }
+                return `<details class="my-4 rounded-lg border border-border p-4 bg-card">
+                    <summary class="font-medium cursor-pointer">${title}</summary>
+                    <div class="mt-2 pl-4">${childrenHtml || '<p class="text-muted-foreground text-sm">Empty toggle</p>'}</div>
+                </details>`;
+            }
+
+            // --- Multi-Column Layouts ---
+            case 'column_list': {
+                const columns = block.content || [];
+                if (columns.length === 0) return '';
+
+                let columnsHtml = '';
+                columns.forEach((colId: string) => {
+                    const colBlock = blocks[colId]?.value;
+                    let colContent = '';
+                    if (colBlock?.content) {
+                        colBlock.content.forEach((childId: string) => {
+                            colContent += processBlock(childId);
+                        });
+                    }
+                    columnsHtml += `<div class="flex-1 min-w-0">${colContent}</div>`;
+                });
+                return `<div class="flex flex-col md:flex-row gap-4 my-4">${columnsHtml}</div>`;
+            }
+            case 'column': {
+                // Handled by column_list parent
+                return '';
             }
 
             default: {
@@ -337,6 +467,34 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                             : `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(source)}`;
                         return `<div class="aspect-video w-full my-4"><iframe src="${embedSrc}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
                     }
+
+                    // Google Maps
+                    if (source.includes('google.com/maps') || source.includes('maps.google.com')) {
+                        // Convert regular Google Maps URL to embed format
+                        let embedUrl = source;
+                        if (!source.includes('/embed')) {
+                            // Try to extract place or coordinates
+                            embedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d0!2d0!3d0!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0!5e0!3m2!1sen!2s!4v${Date.now()}`;
+                            // If original URL has place info, use iframe with src parameter
+                            if (source.includes('@') || source.includes('place')) {
+                                embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(source)}&output=embed`;
+                            }
+                        }
+                        return `<div class="w-full my-4"><iframe src="${embedUrl}" width="100%" height="450" style="border:0;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="rounded-lg"></iframe></div>`;
+                    }
+
+                    // Twitter/X embed
+                    if (source.includes('twitter.com') || source.includes('x.com')) {
+                        // For tweets, we need to use Twitter's embed script
+                        return `<div class="my-4"><blockquote class="twitter-tweet"><a href="${source}">View Tweet</a></blockquote><script async src="https://platform.twitter.com/widgets.js"></script></div>`;
+                    }
+
+                    // Loom video
+                    if (source.includes('loom.com')) {
+                        const embedUrl = source.replace('share', 'embed');
+                        return `<div class="aspect-video w-full my-4"><iframe src="${embedUrl}" class="w-full h-full rounded-lg" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>`;
+                    }
+
                     // Generic fallback for other embeds
                     return `<div class="aspect-video w-full my-4"><iframe src="${source}" class="w-full h-full rounded-lg bg-muted" frameborder="0" allowfullscreen></iframe></div>`;
                 }
