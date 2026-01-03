@@ -892,3 +892,37 @@ pre[class*="language-"] {
 .token.inserted {
   color: #57ab5a;
 }
+
+/* Bookmark/Link Preview blocks - ensure text is visible in dark mode */
+.notion-bookmark,
+.notion-link-preview,
+.notion-asset-wrapper a[href],
+a.notion-bookmark {
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
+  background: hsl(var(--muted) / 0.3) !important;
+}
+
+.notion-bookmark-title,
+.notion-link-preview-title,
+.notion-bookmark .notion-bookmark-content .notion-bookmark-title {
+  color: hsl(var(--foreground)) !important;
+}
+
+.notion-bookmark-description,
+.notion-link-preview-description,
+.notion-bookmark .notion-bookmark-content .notion-bookmark-description {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.notion-bookmark-link,
+.notion-bookmark .notion-bookmark-content .notion-bookmark-link,
+.notion-bookmark-link-text {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Generic fix for any dark text in Notion blocks in dark mode */
+.dark .notion-bookmark *,
+.dark .notion-link-preview * {
+  color: inherit;
+}

@@ -932,6 +932,21 @@ function extractDatabaseRows(recordMap: any): any[] {
             }
         }
 
+        // Always extract system-level "Created by" from the block metadata
+        // This handles Notion's automatic "Created by" column (system property)
+        if (!row.properties['created by'] && block.created_by_id) {
+            const userId = block.created_by_id;
+            const notionUsers = recordMap.notion_user || {};
+            const userRecord = (notionUsers as any)[userId]?.value;
+            if (userRecord) {
+                row.properties['created by'] = userRecord.name || userRecord.given_name || '';
+                if (userRecord.profile_photo) {
+                    row.properties['created by_avatar'] = userRecord.profile_photo;
+                }
+                console.log('[Notion] Extracted system created_by:', row.properties['created by']);
+            }
+        }
+
         // Debug log to trace row extraction
         console.log('[Notion ExtractRow]', row.properties.title ? `OK: ${row.properties.title}` : `FILTERED: No title found, raw props: ${JSON.stringify(Object.keys(properties))}`);
 
