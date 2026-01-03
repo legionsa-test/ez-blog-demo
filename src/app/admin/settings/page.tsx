@@ -419,6 +419,47 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+            {/* Author Profile Configuration */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Author Profile (Default)</CardTitle>
+                    <CardDescription>
+                        Default author information used when Notion "Created by" is missing. Set via environment variables:
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="rounded-lg border border-blue-500/50 bg-blue-500/10 p-4">
+                        <p className="font-medium text-blue-700 dark:text-blue-400 mb-2">
+                            Fallback Configuration
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            These values are used as fallbacks. The primary author info is now automatically extracted from the <strong>Created by</strong> column in your Notion database.
+                        </p>
+                    </div>
+
+                    <div className="grid gap-2 font-mono text-xs">
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                            <span className="text-muted-foreground">NEXT_PUBLIC_AUTHOR_NAME</span>
+                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_AUTHOR_NAME ? 'text-green-600' : 'text-amber-500'}`}>
+                                {process.env.NEXT_PUBLIC_AUTHOR_NAME || 'Admin'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                            <span className="text-muted-foreground">NEXT_PUBLIC_AUTHOR_AVATAR</span>
+                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_AUTHOR_AVATAR ? 'text-green-600' : 'text-amber-500'}`}>
+                                {process.env.NEXT_PUBLIC_AUTHOR_AVATAR || '/avatar.svg'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                            <span className="text-muted-foreground">NEXT_PUBLIC_AUTHOR_BIO</span>
+                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_AUTHOR_BIO ? 'text-green-600' : 'text-amber-500'}`}>
+                                {process.env.NEXT_PUBLIC_AUTHOR_BIO || 'Blog administrator'}
+                            </span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Data Management */}
             <Card>
                 <CardHeader>
