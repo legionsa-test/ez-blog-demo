@@ -39,9 +39,26 @@ export default function DebugNotionPage() {
             {data && (
                 <div className="space-y-6">
                     <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded overflow-auto max-h-[500px]">
-                        <h2 className="font-bold mb-2">Posts Found: {data.posts?.length}</h2>
+                        <h2 className="font-bold mb-2">Raw RecordMap Users</h2>
                         <pre className="text-xs font-mono whitespace-pre-wrap">
-                            {JSON.stringify(data.posts?.slice(0, 1), null, 2)}
+                            {JSON.stringify(data.recordMap?.notion_user || {}, null, 2)}
+                        </pre>
+                    </div>
+
+                    <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded overflow-auto max-h-[500px]">
+                        <h2 className="font-bold mb-2">First Block Metadata</h2>
+                        <pre className="text-xs font-mono whitespace-pre-wrap">
+                            {(() => {
+                                const blockId = Object.keys(data.recordMap?.block || {})[0];
+                                const block = data.recordMap?.block?.[blockId]?.value;
+                                return JSON.stringify({
+                                    id: blockId,
+                                    type: block?.type,
+                                    created_by_id: block?.created_by_id,
+                                    created_by_table: block?.created_by_table, // checking if it exists
+                                    properties: block?.properties
+                                }, null, 2);
+                            })()}
                         </pre>
                     </div>
 
@@ -52,8 +69,6 @@ export default function DebugNotionPage() {
                                 title: data.posts[0].title,
                                 authorName: data.posts[0].authorName,
                                 authorAvatar: data.posts[0].authorAvatar,
-                                // Check available keys
-                                keys: Object.keys(data.posts[0])
                             }, null, 2) : 'No posts'}
                         </pre>
                     </div>
