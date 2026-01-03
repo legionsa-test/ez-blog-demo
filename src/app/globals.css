@@ -909,10 +909,23 @@ a.notion-bookmark {
   color: hsl(var(--foreground)) !important;
 }
 
+.dark .notion-bookmark-title,
+.dark .notion-link-preview-title,
+.dark .notion-bookmark .notion-bookmark-content .notion-bookmark-title {
+  color: #ffffff !important;
+}
+
 .notion-bookmark-description,
 .notion-link-preview-description,
 .notion-bookmark .notion-bookmark-content .notion-bookmark-description {
   color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .notion-bookmark-description,
+.dark .notion-link-preview-description,
+.dark .notion-bookmark .notion-bookmark-content .notion-bookmark-description {
+  color: #a1a1aa !important;
+  /* zinc-400 */
 }
 
 .notion-bookmark-link,
@@ -921,8 +934,16 @@ a.notion-bookmark {
   color: hsl(var(--muted-foreground)) !important;
 }
 
+.dark .notion-bookmark-link,
+.dark .notion-bookmark .notion-bookmark-content .notion-bookmark-link,
+.dark .notion-bookmark-link-text {
+  color: #a1a1aa !important;
+  /* zinc-400 */
+}
+
 /* Generic fix for any dark text in Notion blocks in dark mode */
 .dark .notion-bookmark *,
 .dark .notion-link-preview * {
-  color: inherit;
+  border-color: #3f3f46 !important;
+  /* zinc-700 */
 }

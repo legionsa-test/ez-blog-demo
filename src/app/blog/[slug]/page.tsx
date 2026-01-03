@@ -77,16 +77,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             console.error('Error fetching recordMap on server:', error);
         }
 
-        // Use Notion author if available, otherwise fall back to primary author
-        const primaryAuthor = getPrimaryAuthor();
-        const author = notionPost.authorName
-            ? {
-                id: 'notion-author',
-                name: notionPost.authorName,
-                avatar: notionPost.authorAvatar || primaryAuthor.avatar,
-                bio: ''
-            }
-            : primaryAuthor;
+        const author = getPrimaryAuthor();
 
         // Construct the Post object
         const post: Post = {

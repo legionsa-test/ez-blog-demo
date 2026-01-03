@@ -15,37 +15,30 @@ export default async function HomePage() {
     const rawPosts = await getNotionPosts();
 
     if (rawPosts && rawPosts.length > 0) {
-      const primaryAuthor = getPrimaryAuthor();
+      const author = getPrimaryAuthor();
 
       notionPosts = rawPosts
         .filter((p: any) => p.status === 'published')
-        .map((p: any) => {
-          // Use Notion author if available
-          const author = p.authorName
-            ? { id: 'notion-author', name: p.authorName, avatar: p.authorAvatar || primaryAuthor.avatar, bio: '' }
-            : primaryAuthor;
-
-          return {
-            id: p.notionId,
-            title: p.title,
-            slug: p.slug,
-            excerpt: p.excerpt || '',
-            content: p.content,
-            coverImage: p.coverImage || '',
-            coverImageSize: p.coverImageSize,
-            tags: p.tags || [],
-            status: 'published' as const,
-            publishedAt: p.publishedAt || new Date().toISOString(),
-            createdAt: p.publishedAt || new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            author,
-            notionId: p.notionId,
-            source: 'notion' as const,
-            categoryId: '',
-            scheduledAt: null,
-            readingTime: Math.ceil((p.content?.length || 0) / 1000), // Estimate
-          };
-        });
+        .map((p: any) => ({
+          id: p.notionId,
+          title: p.title,
+          slug: p.slug,
+          excerpt: p.excerpt || '',
+          content: p.content,
+          coverImage: p.coverImage || '',
+          coverImageSize: p.coverImageSize,
+          tags: p.tags || [],
+          status: 'published' as const,
+          publishedAt: p.publishedAt || new Date().toISOString(),
+          createdAt: p.publishedAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          author,
+          notionId: p.notionId,
+          source: 'notion' as const,
+          categoryId: '',
+          scheduledAt: null,
+          readingTime: Math.ceil((p.content?.length || 0) / 1000), // Estimate
+        }));
     }
   } catch (error) {
     console.error('Error fetching Notion posts on server:', error);
