@@ -149,6 +149,83 @@ function extractText(textArray: any): string {
     return '';
 }
 
+// oEmbed cache to avoid repeated API calls
+const oEmbedCache: Record<string, string> = {};
+
+// Helper to fetch oEmbed HTML for Spotify and SoundCloud
+async function fetchOEmbedHtml(url: string): Promise<string | null> {
+    // Check cache first
+    if (oEmbedCache[url]) {
+        return oEmbedCache[url];
+    }
+
+    try {
+        let oEmbedUrl = '';
+
+        // Spotify oEmbed
+        if (url.includes('spotify.com')) {
+            oEmbedUrl = `https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`;
+        }
+        // SoundCloud oEmbed
+        else if (url.includes('soundcloud.com')) {
+            oEmbedUrl = `https://soundcloud.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+        }
+
+        if (!oEmbedUrl) return null;
+
+        const response = await fetch(oEmbedUrl);
+        if (!response.ok) {
+            console.log(`[oEmbed] Failed to fetch for ${url}: ${response.status}`);
+            return null;
+        }
+
+        const data = await response.json();
+        if (data.html) {
+            // Cache the result
+            oEmbedCache[url] = data.html;
+            return data.html;
+        }
+
+        return null;
+    } catch (error) {
+        console.error(`[oEmbed] Error fetching for ${url}:`, error);
+        return null;
+    }
+}
+
+// Pre-fetch oEmbed data for all Spotify/SoundCloud URLs in the recordMap
+async function prefetchOEmbedData(recordMap: any): Promise<void> {
+    if (!recordMap?.block) return;
+
+    const urls: string[] = [];
+    const blocks = recordMap.block;
+
+    // Scan all blocks for Spotify/SoundCloud URLs
+    for (const blockId in blocks) {
+        const block = blocks[blockId]?.value;
+        if (!block) continue;
+
+        const { type, properties, format } = block;
+
+        // Check audio blocks and embed blocks
+        if (type === 'audio' || type === 'embed' || type === 'video') {
+            const source = properties?.source?.[0]?.[0] || format?.display_source || format?.uri;
+            if (source) {
+                if (source.includes('spotify.com') || source.includes('soundcloud.com')) {
+                    urls.push(source);
+                }
+            }
+        }
+    }
+
+    // Fetch all oEmbed data in parallel
+    if (urls.length > 0) {
+        console.log(`[oEmbed] Pre-fetching ${urls.length} embed URLs...`);
+        await Promise.all(urls.map(url => fetchOEmbedHtml(url)));
+        console.log(`[oEmbed] Pre-fetch complete. Cache size: ${Object.keys(oEmbedCache).length}`);
+    }
+}
+
 // Convert Notion blocks to HTML
 function blocksToHtml(recordMap: any, pageId: string): string {
     if (!recordMap?.block) return '';
@@ -357,13 +434,19 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50 my-4"><span class="font-medium">${caption}</span></a>`;
             }
 
-            // --- Audio Embeds (as link cards - services block iframe embedding) ---
+            // --- Audio Embeds (using oEmbed when available) ---
             case 'audio': {
                 const source = properties?.source?.[0]?.[0] || format?.display_source;
                 if (!source) return '';
 
-                // Spotify - Link card (embedding blocked from third-party sites)
+                // Spotify - Try oEmbed first, fallback to link card
                 if (source.includes('spotify.com')) {
+                    // Check if we have cached oEmbed HTML
+                    const cachedHtml = oEmbedCache[source];
+                    if (cachedHtml) {
+                        return `<div class="my-4">${cachedHtml}</div>`;
+                    }
+                    // Fallback to styled link card
                     return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-[#1DB954] hover:bg-[#1ed760] transition-colors">
                         <div class="flex items-center gap-3 text-white">
                             <span class="text-3xl">🎵</span>
@@ -375,8 +458,14 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                     </a>`;
                 }
 
-                // SoundCloud - Link card (embedding blocked from third-party sites)
+                // SoundCloud - Try oEmbed first, fallback to link card
                 if (source.includes('soundcloud.com')) {
+                    // Check if we have cached oEmbed HTML
+                    const cachedHtml = oEmbedCache[source];
+                    if (cachedHtml) {
+                        return `<div class="my-4">${cachedHtml}</div>`;
+                    }
+                    // Fallback to styled link card
                     return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-[#ff5500] hover:bg-[#ff7733] transition-colors">
                         <div class="flex items-center gap-3 text-white">
                             <span class="text-3xl">☁️</span>
@@ -479,7 +568,7 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                     block.content.forEach((childId: string) => {
                         childrenHtml += processBlock(childId);
                     });
-                    return `<aside class="my-4 flex items-start gap-3 rounded-lg border border-border p-4 bg-muted/30"><span class="text-xl">${icon}</span><div class="flex-1 text-sm">${childrenHtml}</div></aside>`;
+                    return `<aside class="callout my-4 rounded-lg border border-border p-4 bg-muted/30" style="display: flex; align-items: flex-start; gap: 12px;"><span style="font-size: 1.25rem; line-height: 1.5;">${icon}</span><div style="flex: 1; min-width: 0;">${childrenHtml}</div></aside>`;
                 }
 
                 // Debug: Log if text is empty
@@ -487,7 +576,7 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                     console.log('[Notion] Callout has no text. Properties:', JSON.stringify(properties || {}).slice(0, 300));
                 }
 
-                return `<aside class="my-4 flex items-start gap-3 rounded-lg border border-border p-4 bg-muted/30"><span class="text-xl">${icon}</span><div class="flex-1 text-sm">${text || '(Empty callout)'}</div></aside>`;
+                return `<aside class="callout my-4 rounded-lg border border-border p-4 bg-muted/30" style="display: flex; align-items: flex-start; gap: 12px;"><span style="font-size: 1.25rem; line-height: 1.5;">${icon}</span><div style="flex: 1; min-width: 0;">${text || '(Empty callout)'}</div></aside>`;
             }
 
             // --- Block Equation ---
@@ -767,6 +856,10 @@ export async function fetchNotionData(pageUrl: string) {
         // Single page
         const block = recordMap?.block?.[pageId]?.value;
         const title = extractText(block?.properties?.title) || 'Untitled';
+
+        // Pre-fetch oEmbed data for Spotify/SoundCloud
+        await prefetchOEmbedData(recordMap);
+
         const content = blocksToHtml(recordMap, pageId);
         const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -801,6 +894,9 @@ export async function fetchNotionData(pageUrl: string) {
 
                 let content = '';
                 try {
+                    // Pre-fetch oEmbed data for Spotify/SoundCloud
+                    await prefetchOEmbedData(pageRecordMap);
+
                     content = blocksToHtml(pageRecordMap, row.id);
                 } catch (htmlError: any) {
                     console.error('[Notion] blocksToHtml error for:', row.id, '| Error:', htmlError?.message, '| Stack:', htmlError?.stack?.slice(0, 300));
