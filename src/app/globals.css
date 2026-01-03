@@ -675,7 +675,7 @@
   margin-top: 0.5rem;
 }
 
-/* Callout blocks - ensure content visibility */
+/* Callout blocks - styled like Notion */
 .notion-callout {
   display: flex !important;
   align-items: flex-start !important;
@@ -687,21 +687,27 @@
   border: 1px solid hsl(var(--border)) !important;
 }
 
-.notion-callout-icon {
+.notion-callout-icon,
+.notion-callout> :first-child {
   font-size: 1.25rem;
   line-height: 1.5;
   flex-shrink: 0;
 }
 
-.notion-callout-text {
+.notion-callout-text,
+.notion-callout>div:last-child,
+.notion-callout> :not(:first-child) {
   flex: 1;
   min-width: 0;
   color: hsl(var(--foreground)) !important;
 }
 
-/* Ensure callout text renders */
+/* Ensure all text inside callout is visible */
+.notion-callout *,
 .notion-callout .notion-page-content-inner,
-.notion-callout .notion-text {
+.notion-callout .notion-text,
+.notion-callout p,
+.notion-callout span {
   color: hsl(var(--foreground)) !important;
 }
 
@@ -740,15 +746,31 @@
   border: none !important;
 }
 
-/* Audio embeds (Spotify, SoundCloud) - larger radius to hide corners */
+/* Audio embeds (Spotify, SoundCloud) - Notion uses 12px radius */
 .notion-audio,
-.notion-asset-wrapper[style*="spotify"],
-.notion-asset-wrapper[style*="soundcloud"] {
-  border-radius: 1rem !important;
+.notion-asset-wrapper iframe[src*="spotify"],
+.notion-asset-wrapper iframe[src*="soundcloud"],
+iframe[src*="spotify.com"],
+iframe[src*="soundcloud.com"] {
+  border-radius: 12px !important;
   overflow: hidden !important;
 }
 
+/* Wrap Spotify/SoundCloud in clipped container */
+.notion-asset-wrapper:has(iframe[src*="spotify"]),
+.notion-asset-wrapper:has(iframe[src*="soundcloud"]) {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
 .notion-audio iframe {
-  border-radius: 1rem !important;
+  border-radius: 12px !important;
+  border: none !important;
+}
+
+/* Force all embed iframes to have no border */
+.notion-asset-wrapper iframe,
+.notion-embed iframe {
   border: none !important;
 }

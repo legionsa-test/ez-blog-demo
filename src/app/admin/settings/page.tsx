@@ -372,108 +372,49 @@ export default function SettingsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                        <Switch
-                            id="giscus-enabled"
-                            checked={siteSettings.giscusConfig?.enabled || false}
-                            onCheckedChange={(checked) =>
-                                setSiteSettings({
-                                    ...siteSettings,
-                                    giscusConfig: {
-                                        ...siteSettings.giscusConfig!,
-                                        enabled: checked
-                                    }
-                                })
-                            }
-                        />
-                        <Label htmlFor="giscus-enabled">Enable Comments</Label>
+                    <div className="rounded-lg border border-blue-500/50 bg-blue-500/10 p-4">
+                        <p className="font-medium text-blue-700 dark:text-blue-400 mb-2">
+                            Configuration via Environment Variables
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Giscus is now configured via environment variables for security and consistency.
+                            Add these in <strong>Vercel Dashboard → Settings → Environment Variables</strong>:
+                        </p>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="giscus-repo">Repository (username/repo)</Label>
-                            <Input
-                                id="giscus-repo"
-                                value={siteSettings.giscusConfig?.repo || ''}
-                                onChange={(e) =>
-                                    setSiteSettings({
-                                        ...siteSettings,
-                                        giscusConfig: {
-                                            ...siteSettings.giscusConfig!,
-                                            repo: e.target.value
-                                        }
-                                    })
-                                }
-                                placeholder="e.g. kalvi/ez-blog"
-                            />
+                    <div className="grid gap-2 font-mono text-xs">
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_REPO</span>
+                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_REPO ? 'text-green-600' : 'text-amber-500'}`}>
+                                {process.env.NEXT_PUBLIC_GISCUS_REPO || 'username/repo-name'}
+                            </span>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="giscus-repo-id">Repository ID (R_...)</Label>
-                            <Input
-                                id="giscus-repo-id"
-                                value={siteSettings.giscusConfig?.repoId || ''}
-                                onChange={(e) =>
-                                    setSiteSettings({
-                                        ...siteSettings,
-                                        giscusConfig: {
-                                            ...siteSettings.giscusConfig!,
-                                            repoId: e.target.value
-                                        }
-                                    })
-                                }
-                                placeholder="e.g. R_kgDOL..."
-                            />
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_REPO_ID</span>
+                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_REPO_ID ? 'text-green-600' : 'text-amber-500'}`}>
+                                {process.env.NEXT_PUBLIC_GISCUS_REPO_ID || 'R_...'}
+                            </span>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="giscus-category">Category Name</Label>
-                            <Input
-                                id="giscus-category"
-                                value={siteSettings.giscusConfig?.category || ''}
-                                onChange={(e) =>
-                                    setSiteSettings({
-                                        ...siteSettings,
-                                        giscusConfig: {
-                                            ...siteSettings.giscusConfig!,
-                                            category: e.target.value
-                                        }
-                                    })
-                                }
-                                placeholder="Announcements"
-                            />
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_CATEGORY</span>
+                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_CATEGORY ? 'text-green-600' : 'text-amber-500'}`}>
+                                {process.env.NEXT_PUBLIC_GISCUS_CATEGORY || 'Announcements'}
+                            </span>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="giscus-category-id">Category ID (DIC_...)</Label>
-                            <Input
-                                id="giscus-category-id"
-                                value={siteSettings.giscusConfig?.categoryId || ''}
-                                onChange={(e) =>
-                                    setSiteSettings({
-                                        ...siteSettings,
-                                        giscusConfig: {
-                                            ...siteSettings.giscusConfig!,
-                                            categoryId: e.target.value
-                                        }
-                                    })
-                                }
-                                placeholder="e.g. DIC_kwDOL..."
-                            />
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
+                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_CATEGORY_ID</span>
+                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID ? 'text-green-600' : 'text-amber-500'}`}>
+                                {process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID || 'DIC_...'}
+                            </span>
                         </div>
                     </div>
-
-                    <Button
-                        onClick={() => {
-                            saveSiteSettings(siteSettings);
-                            toast.success('Giscus settings saved!');
-                        }}
-                    >
-                        Save Comment Settings
-                    </Button>
 
                     <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
                         <p className="font-medium mb-1">How to get these values:</p>
                         <p>1. Go to <a href="https://giscus.app" target="_blank" className="underline text-primary">giscus.app</a> configuration page.</p>
                         <p>2. Enter your repository and enable Discussions.</p>
-                        <p>3. Copy the <code>data-repo-id</code>, <code>data-category</code>, and <code>data-category-id</code> from the generated script tag.</p>
+                        <p>3. Copy the <code>data-repo</code>, <code>data-repo-id</code>, <code>data-category</code>, and <code>data-category-id</code> values.</p>
+                        <p>4. Add them as environment variables in Vercel and redeploy.</p>
                     </div>
                 </CardContent>
             </Card>

@@ -223,6 +223,32 @@ export function NotionPageRenderer({
         return null;
     }
 
+    // Find external_object_instance blocks (Figma, etc.) that react-notion-x doesn't render
+    const externalObjectBlocks = useMemo(() => {
+        if (!fixedRecordMap?.block) return [];
+
+        return Object.entries(fixedRecordMap.block)
+            .filter(([_, blockWrapper]) => {
+                const block = (blockWrapper as any)?.value;
+                return block?.type === 'external_object_instance';
+            })
+            .map(([id, blockWrapper]) => {
+                const block = (blockWrapper as any)?.value;
+                const format = block?.format as any;
+
+                // Extract embed URL from format
+                let embedUrl = format?.uri || format?.display_source || format?.original_url || '';
+
+                // Fix Figma URLs to use embed format
+                if (embedUrl.includes('figma.com') && !embedUrl.includes('embed_host')) {
+                    embedUrl = `https://www.figma.com/embed?embed_host=notion&url=${encodeURIComponent(embedUrl)}`;
+                }
+
+                return { id, embedUrl, block };
+            })
+            .filter(item => item.embedUrl);
+    }, [fixedRecordMap]);
+
     return (
         <div ref={containerRef} className={`notion-renderer-wrapper ${className}`}>
             <NotionRenderer
@@ -239,10 +265,26 @@ export function NotionPageRenderer({
                     Modal,
                     nextImage: Image,
                     nextLink: Link,
-                    Callout: CustomCallout, // Pass custom Callout
+                    // Let react-notion-x handle Callout natively - styled via CSS
                 }}
                 mapPageUrl={(pageId) => `/blog/${pageId}`}
             />
+
+            {/* Render external_object_instance blocks (Figma, etc.) that react-notion-x doesn't support */}
+            {externalObjectBlocks.length > 0 && (
+                <div className="external-embeds-section mt-6">
+                    {externalObjectBlocks.map(({ id, embedUrl }) => (
+                        <div key={id} className="my-6 w-full" style={{ aspectRatio: '16/9' }}>
+                            <iframe
+                                src={embedUrl}
+                                className="w-full h-full rounded-xl border-0"
+                                style={{ minHeight: '450px' }}
+                                allowFullScreen
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
