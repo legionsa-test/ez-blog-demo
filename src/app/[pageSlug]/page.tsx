@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ChevronUp } from 'lucide-react';
-import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPageBySlug, getPublishedPages } from '@/lib/pages';
@@ -149,7 +148,6 @@ export default function PageSlugPage() {
                     </div>
                 </div>
             </article>
-            <Footer />
         </>
     );
 }

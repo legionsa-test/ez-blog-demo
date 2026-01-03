@@ -327,7 +327,8 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 }
 
                 // Try to extract an embed source from unknown types
-                const source = properties?.source?.[0]?.[0] || format?.display_source;
+                // IMPORTANT: Check format.uri too - this is where Figma URLs are stored!
+                const source = properties?.source?.[0]?.[0] || format?.display_source || format?.uri;
                 if (source && (source.startsWith('http://') || source.startsWith('https://'))) {
                     // Check if it's a Figma URL
                     if (source.includes('figma.com')) {
