@@ -357,24 +357,35 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                 return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted/50 my-4"><span class="font-medium">${caption}</span></a>`;
             }
 
-            // --- Audio Embeds ---
+            // --- Audio Embeds (as link cards - services block iframe embedding) ---
             case 'audio': {
                 const source = properties?.source?.[0]?.[0] || format?.display_source;
                 if (!source) return '';
 
-                // Spotify
+                // Spotify - Link card (embedding blocked from third-party sites)
                 if (source.includes('spotify.com')) {
-                    // Convert open.spotify.com/track/xxx to embed URL
-                    let embedUrl = source;
-                    if (source.includes('open.spotify.com')) {
-                        embedUrl = source.replace('open.spotify.com', 'open.spotify.com/embed');
-                    }
-                    return `<div class="my-4"><iframe src="${embedUrl}" width="100%" height="352" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" class="rounded-lg"></iframe></div>`;
+                    return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-[#1DB954] hover:bg-[#1ed760] transition-colors">
+                        <div class="flex items-center gap-3 text-white">
+                            <span class="text-3xl">🎵</span>
+                            <div>
+                                <p class="font-semibold">Listen on Spotify</p>
+                                <p class="text-sm opacity-80">Click to open in Spotify</p>
+                            </div>
+                        </div>
+                    </a>`;
                 }
 
-                // SoundCloud
+                // SoundCloud - Link card (embedding blocked from third-party sites)
                 if (source.includes('soundcloud.com')) {
-                    return `<div class="my-4"><iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=${encodeURIComponent(source)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true" class="rounded-lg"></iframe></div>`;
+                    return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-[#ff5500] hover:bg-[#ff7733] transition-colors">
+                        <div class="flex items-center gap-3 text-white">
+                            <span class="text-3xl">☁️</span>
+                            <div>
+                                <p class="font-semibold">Listen on SoundCloud</p>
+                                <p class="text-sm opacity-80">Click to open in SoundCloud</p>
+                            </div>
+                        </div>
+                    </a>`;
                 }
 
                 // Direct audio file
@@ -457,10 +468,26 @@ function blocksToHtml(recordMap: any, pageId: string): string {
 
             // --- Callout (enhanced) ---
             case 'callout': {
-                const text = extractText(properties?.title);
+                // Callout text can be in title, or might need to process children
+                let text = extractText(properties?.title);
                 const icon = format?.page_icon || '💡';
                 const color = format?.block_color || 'gray_background';
-                return `<aside class="my-4 flex items-start gap-3 rounded-lg border border-border p-4 bg-muted/30"><span class="text-xl">${icon}</span><div class="flex-1 text-sm">${text}</div></aside>`;
+
+                // If no text in title, check if callout has child blocks
+                if (!text && block.content && block.content.length > 0) {
+                    let childrenHtml = '';
+                    block.content.forEach((childId: string) => {
+                        childrenHtml += processBlock(childId);
+                    });
+                    return `<aside class="my-4 flex items-start gap-3 rounded-lg border border-border p-4 bg-muted/30"><span class="text-xl">${icon}</span><div class="flex-1 text-sm">${childrenHtml}</div></aside>`;
+                }
+
+                // Debug: Log if text is empty
+                if (!text) {
+                    console.log('[Notion] Callout has no text. Properties:', JSON.stringify(properties || {}).slice(0, 300));
+                }
+
+                return `<aside class="my-4 flex items-start gap-3 rounded-lg border border-border p-4 bg-muted/30"><span class="text-xl">${icon}</span><div class="flex-1 text-sm">${text || '(Empty callout)'}</div></aside>`;
             }
 
             // --- Block Equation ---
@@ -586,22 +613,30 @@ function blocksToHtml(recordMap: any, pageId: string): string {
                         </a>`;
                     }
 
-                    // Spotify - styled card with play button link
+                    // Spotify - Link card (embedding blocked from third-party sites)
                     if (source.includes('spotify.com')) {
-                        const embedUrl = source.replace('open.spotify.com', 'open.spotify.com/embed');
-                        return `<div class="my-4">
-                            <iframe src="${embedUrl}" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" class="rounded-lg"></iframe>
-                            <noscript><a href="${source}" target="_blank" class="text-sm text-muted-foreground">Open in Spotify</a></noscript>
-                        </div>`;
+                        return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-[#1DB954] hover:bg-[#1ed760] transition-colors">
+                            <div class="flex items-center gap-3 text-white">
+                                <span class="text-3xl">🎵</span>
+                                <div>
+                                    <p class="font-semibold">Listen on Spotify</p>
+                                    <p class="text-sm opacity-80">Click to open in Spotify</p>
+                                </div>
+                            </div>
+                        </a>`;
                     }
 
-                    // SoundCloud - styled card with player link
+                    // SoundCloud - Link card (embedding blocked from third-party sites)
                     if (source.includes('soundcloud.com')) {
-                        const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(source)}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`;
-                        return `<div class="my-4">
-                            <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="${embedUrl}" class="rounded-lg"></iframe>
-                            <noscript><a href="${source}" target="_blank" class="text-sm text-muted-foreground">Open in SoundCloud</a></noscript>
-                        </div>`;
+                        return `<a href="${source}" target="_blank" rel="noopener noreferrer" class="block my-4 p-4 rounded-lg border border-border bg-[#ff5500] hover:bg-[#ff7733] transition-colors">
+                            <div class="flex items-center gap-3 text-white">
+                                <span class="text-3xl">☁️</span>
+                                <div>
+                                    <p class="font-semibold">Listen on SoundCloud</p>
+                                    <p class="text-sm opacity-80">Click to open in SoundCloud</p>
+                                </div>
+                            </div>
+                        </a>`;
                     }
 
                     // Loom video
