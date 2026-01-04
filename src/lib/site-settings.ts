@@ -109,26 +109,6 @@ export function getUnsplashApiKey(): string {
     return getSiteSettings().unsplashApiKey;
 }
 
-// Get admin password
-// Priority: 1. Environment variable (secure, server-controlled)
-//          2. localStorage (local development only)
-//          3. Default fallback
-export function getAdminPassword(): string {
-    const envPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-    if (envPassword) {
-        return envPassword;
-    }
-
-    if (typeof window !== 'undefined') {
-        const localSettings = getLocalStorageSettings();
-        if (localSettings.adminPassword) {
-            return localSettings.adminPassword;
-        }
-    }
-
-    return 'admin123';
-}
-
 // Check if a setting is controlled by environment variable
 export function isSettingFromEnv(setting: keyof SiteSettings): boolean {
     const envMap: Partial<Record<keyof SiteSettings, string | undefined>> = {
@@ -141,7 +121,6 @@ export function isSettingFromEnv(setting: keyof SiteSettings): boolean {
         footerText: process.env.NEXT_PUBLIC_FOOTER_TEXT,
         showRssFeed: process.env.NEXT_PUBLIC_SHOW_RSS,
         unsplashApiKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
-        adminPassword: process.env.NEXT_PUBLIC_ADMIN_PASSWORD,
     };
     return !!envMap[setting];
 }

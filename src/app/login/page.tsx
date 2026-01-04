@@ -163,7 +163,7 @@ function LoginForm() {
             }
 
             // Server-side rate limit passed, now check password
-            if (login(password)) {
+            if (await login(password)) {
                 // Success - clear both client and server rate limits
                 clearRateLimitData();
                 await fetch('/api/auth/rate-limit', { method: 'DELETE' });
@@ -193,7 +193,7 @@ function LoginForm() {
             // Network error - fall back to client-side only
             console.error('Rate limit API error:', err);
 
-            if (login(password)) {
+            if (await login(password)) {
                 clearRateLimitData();
                 router.push('/admin');
             } else {

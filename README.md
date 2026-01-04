@@ -84,6 +84,14 @@ Get values from [giscus.app](https://giscus.app):
 | `NEXT_PUBLIC_GISCUS_CATEGORY` | Category name |
 | `NEXT_PUBLIC_GISCUS_CATEGORY_ID` | Category ID |
 
+### Admin Security
+
+| Variable | Description | Default |
+|----------|-------------|---------|\r
+| `ADMIN_PASSWORD` | Admin dashboard password (server-side only) | `admin123` |
+
+> **⚠️ Security Note**: This is a **server-side** variable (no `NEXT_PUBLIC_` prefix). It is never exposed to browsers. Change the default password immediately in production.
+
 ---
 
 ## 🔗 Notion Setup

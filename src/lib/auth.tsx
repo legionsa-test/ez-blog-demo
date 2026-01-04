@@ -2,7 +2,6 @@
 
 import Cookies from 'js-cookie';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { getAdminPassword } from './site-settings';
 
 const AUTH_COOKIE = 'ezblog_auth';
 const AUTH_EXPIRY_DAYS = 7;
@@ -10,7 +9,7 @@ const AUTH_EXPIRY_DAYS = 7;
 interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (password: string) => boolean;
+    login: (password: string) => Promise<boolean>;
     logout: () => void;
 }
 
@@ -27,14 +26,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = (password: string): boolean => {
-        const adminPassword = getAdminPassword();
-        if (password === adminPassword) {
-            Cookies.set(AUTH_COOKIE, 'true', { expires: AUTH_EXPIRY_DAYS });
-            setIsAuthenticated(true);
-            return true;
+    const login = async (password: string): Promise<boolean> => {
+        try {
+            // Call server-side API for secure password verification
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Password verified on server - set auth cookie
+                Cookies.set(AUTH_COOKIE, 'true', { expires: AUTH_EXPIRY_DAYS });
+                setIsAuthenticated(true);
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('Login error:', error);
+            return false;
         }
-        return false;
     };
 
     const logout = () => {
