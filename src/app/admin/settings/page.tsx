@@ -35,7 +35,6 @@ export default function SettingsPage() {
         title: 'ezBlog',
         icon: '✍️',
         description: '',
-        unsplashApiKey: '',
         adminPassword: '',
     });
     const [isSaving, setIsSaving] = useState(false);
@@ -286,12 +285,6 @@ export default function SettingsPage() {
                                 <span className="text-primary font-semibold">{siteSettings.welcomeText || 'Welcome to'}</span>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                                <span className="text-muted-foreground">NEXT_PUBLIC_UNSPLASH_ACCESS_KEY</span>
-                                <span className="text-green-600 font-semibold">
-                                    {siteSettings.unsplashApiKey ? '✓ Set' : '✗ Not set'}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
                                 <span className="text-muted-foreground">NOTION_PAGE_URL</span>
                                 <span className="text-green-600 font-semibold">
                                     {siteSettings.notionPageUrl ? '✓ Configured' : '✗ Not set'}
@@ -325,11 +318,28 @@ export default function SettingsPage() {
                             id="notion-url"
                             value={siteSettings.notionPageUrl || ''}
                             onChange={(e) => setSiteSettings({ ...siteSettings, notionPageUrl: e.target.value })}
-                            placeholder="https://notion.so/your-page-id"
+                            placeholder="https://hikalvin.notion.site/2db27bd11ca0814eae88d120ff46fbf5?v=2db27bd11ca08102b9f5000cf7f5bf97"
                         />
-                        <p className="text-xs text-muted-foreground">
-                            Paste the URL of your Notion database page. Make sure it&apos;s shared publicly.
-                        </p>
+                        <div className="space-y-2 text-xs text-muted-foreground">
+                            <p>
+                                <strong>Step 1:</strong> Duplicate our{' '}
+                                <a
+                                    href="https://hikalvin.notion.site/2db27bd11ca0814eae88d120ff46fbf5?v=2db27bd11ca08102b9f5000cf7f5bf97&pvs=74"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:underline inline-flex items-center gap-1"
+                                >
+                                    Notion template <ExternalLink className="h-3 w-3" />
+                                </a>{' '}
+                                to your Notion workspace
+                            </p>
+                            <p>
+                                <strong>Step 2:</strong> Share your duplicated page <strong>publicly</strong> and copy the URL
+                            </p>
+                            <p>
+                                <strong>Step 3:</strong> Set <code className="bg-muted px-1 rounded">NOTION_PAGE_URL</code> in <strong>Vercel → Settings → Environment Variables</strong>, then <strong>redeploy</strong>
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex gap-2">
@@ -384,27 +394,39 @@ export default function SettingsPage() {
 
                     <div className="grid gap-2 font-mono text-xs">
                         <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_REPO</span>
-                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_REPO ? 'text-green-600' : 'text-amber-500'}`}>
-                                {process.env.NEXT_PUBLIC_GISCUS_REPO || 'username/repo-name'}
+                            <div>
+                                <span className="text-muted-foreground">GISCUS_REPO</span>
+                                <span className="text-red-500 ml-2">*server-side</span>
+                            </div>
+                            <span className="text-amber-600 font-semibold text-xs">
+                                🔒 Secure (not visible to client)
                             </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_REPO_ID</span>
-                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_REPO_ID ? 'text-green-600' : 'text-amber-500'}`}>
-                                {process.env.NEXT_PUBLIC_GISCUS_REPO_ID || 'R_...'}
+                            <div>
+                                <span className="text-muted-foreground">GISCUS_REPO_ID</span>
+                                <span className="text-red-500 ml-2">*server-side</span>
+                            </div>
+                            <span className="text-amber-600 font-semibold text-xs">
+                                🔒 Secure (not visible to client)
                             </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_CATEGORY</span>
-                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_CATEGORY ? 'text-green-600' : 'text-amber-500'}`}>
-                                {process.env.NEXT_PUBLIC_GISCUS_CATEGORY || 'Announcements'}
+                            <div>
+                                <span className="text-muted-foreground">GISCUS_CATEGORY</span>
+                                <span className="text-red-500 ml-2">*server-side</span>
+                            </div>
+                            <span className="text-amber-600 font-semibold text-xs">
+                                🔒 Secure (not visible to client)
                             </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                            <span className="text-muted-foreground">NEXT_PUBLIC_GISCUS_CATEGORY_ID</span>
-                            <span className={`font-semibold ${process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID ? 'text-green-600' : 'text-amber-500'}`}>
-                                {process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID || 'DIC_...'}
+                            <div>
+                                <span className="text-muted-foreground">GISCUS_CATEGORY_ID</span>
+                                <span className="text-red-500 ml-2">*server-side</span>
+                            </div>
+                            <span className="text-amber-600 font-semibold text-xs">
+                                🔒 Secure (not visible to client)
                             </span>
                         </div>
                     </div>

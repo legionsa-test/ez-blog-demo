@@ -71,7 +71,7 @@ export interface SiteSettings {
   title: string;
   icon: string; // Emoji
   description: string;
-  unsplashApiKey: string;
+
   adminPassword: string;
   showFooter?: boolean;
   footerText?: string;

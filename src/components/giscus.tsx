@@ -19,28 +19,28 @@ export default function GiscusComments() {
     useEffect(() => {
         setMounted(true);
 
-        // Priority 1: Environment variables (recommended for deployment)
-        const envRepo = process.env.NEXT_PUBLIC_GISCUS_REPO;
-        const envRepoId = process.env.NEXT_PUBLIC_GISCUS_REPO_ID;
-        const envCategory = process.env.NEXT_PUBLIC_GISCUS_CATEGORY;
-        const envCategoryId = process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID;
+        // Fetch Giscus config from server-side API
+        fetch('/api/giscus/config')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.enabled && data.repo && data.repoId && data.categoryId) {
+                    setConfig(data);
+                    return;
+                }
 
-        if (envRepo && envRepoId && envCategoryId) {
-            setConfig({
-                enabled: true,
-                repo: envRepo,
-                repoId: envRepoId,
-                category: envCategory || 'Announcements',
-                categoryId: envCategoryId,
+                // Fallback: localStorage settings (for local development / admin UI)
+                const settings = getSiteSettings();
+                if (settings.giscusConfig?.enabled && settings.giscusConfig.repo) {
+                    setConfig(settings.giscusConfig);
+                }
+            })
+            .catch(() => {
+                // On error, try localStorage fallback
+                const settings = getSiteSettings();
+                if (settings.giscusConfig?.enabled && settings.giscusConfig.repo) {
+                    setConfig(settings.giscusConfig);
+                }
             });
-            return;
-        }
-
-        // Priority 2: localStorage settings (for local development / admin UI)
-        const settings = getSiteSettings();
-        if (settings.giscusConfig?.enabled && settings.giscusConfig.repo) {
-            setConfig(settings.giscusConfig);
-        }
     }, []);
 
     if (!mounted || !config) return null;

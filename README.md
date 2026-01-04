@@ -74,24 +74,43 @@ Copy `.env.example` to `.env.local` for local development.
 | `NEXT_PUBLIC_AUTHOR_BIO` | Author bio | — |
 | `NEXT_PUBLIC_AUTHOR_AVATAR` | Avatar URL | `/avatar.svg` |
 
-### Comments (Giscus)
+### Comments (Giscus - Server-Side)
 
-Get values from [giscus.app](https://giscus.app):
+Get values from [giscus.app](https://giscus.app). These are **server-side** variables:
 
 | Variable | Description |
 |----------|-------------|
-| `NEXT_PUBLIC_GISCUS_REPO` | `username/repo-name` |
-| `NEXT_PUBLIC_GISCUS_REPO_ID` | Repository ID |
-| `NEXT_PUBLIC_GISCUS_CATEGORY` | Category name |
-| `NEXT_PUBLIC_GISCUS_CATEGORY_ID` | Category ID |
+| `GISCUS_REPO` | `username/repo-name` |
+| `GISCUS_REPO_ID` | Repository ID |
+| `GISCUS_CATEGORY` | Category name |
+| `GISCUS_CATEGORY_ID` | Category ID |
 
-### Admin Security
+> **🔒 Security Note**: Giscus variables are server-side only (no `NEXT_PUBLIC_` prefix) for better abstraction.
+
+### Notion & Admin Security
 
 | Variable | Description | Default |
-|----------|-------------|---------|\r
+|----------|-------------|---------|
 | `ADMIN_PASSWORD` | Admin dashboard password (server-side only) | `admin123` |
 
-> **⚠️ Security Note**: This is a **server-side** variable (no `NEXT_PUBLIC_` prefix). It is never exposed to browsers. Change the default password immediately in production.
+> **⚠️ Security Note**: `ADMIN_PASSWORD` and `NOTION_PAGE_URL` are **server-side** variables (no `NEXT_PUBLIC_` prefix). They are never exposed to browsers. Change the default password immediately in production.
+
+### 🔄 Migration Guide (For Existing Users)
+
+If you're upgrading from an older version, rename these environment variables:
+
+| **Old Variable (Insecure)** | **New Variable (Secure)** |
+|----------------------------|---------------------------|
+| `NEXT_PUBLIC_ADMIN_PASSWORD` | `ADMIN_PASSWORD` |
+| `NEXT_PUBLIC_NOTION_PAGE_URL` | `NOTION_PAGE_URL` |
+| `NEXT_PUBLIC_GISCUS_REPO` | `GISCUS_REPO` |
+| `NEXT_PUBLIC_GISCUS_REPO_ID` | `GISCUS_REPO_ID` |
+| `NEXT_PUBLIC_GISCUS_CATEGORY` | `GISCUS_CATEGORY` |
+| `NEXT_PUBLIC_GISCUS_CATEGORY_ID` | `GISCUS_CATEGORY_ID` |
+
+**Steps:**
+1. **Vercel**: Dashboard → Settings → Environment Variables → Delete old vars → Add new ones → Redeploy
+2. **Local**: Update `.env.local` with new names → Restart dev server
 
 ---
 
@@ -261,6 +280,49 @@ return (
 
 ---
 
+## 🔄 Migration Guide (For Existing Users)
+
+If you're updating from an older version of ezBlog, you need to rename some environment variables for improved security:
+
+### Environment Variable Changes
+
+| Old Variable (INSECURE) | New Variable (SECURE) | Notes |
+|------------------------|----------------------|-------|
+| `NEXT_PUBLIC_ADMIN_PASSWORD` | `ADMIN_PASSWORD` | Was exposed to clients! |
+| `NEXT_PUBLIC_NOTION_PAGE_URL` | `NOTION_PAGE_URL` | Now server-side only |
+
+### Migration Steps
+
+**1. Update Variables in Vercel:**
+   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   - **Delete**: `NEXT_PUBLIC_ADMIN_PASSWORD`
+   - **Delete**: `NEXT_PUBLIC_NOTION_PAGE_URL`
+   - **Add**: `ADMIN_PASSWORD` with your password value
+   - **Add**: `NOTION_PAGE_URL` with your Notion database URL
+
+**2. Update Local `.env.local`** (if developing locally):
+   ```bash
+   # OLD (remove these)
+   NEXT_PUBLIC_ADMIN_PASSWORD=yourpassword
+   NEXT_PUBLIC_NOTION_PAGE_URL=https://notion.so/your-page
+
+   # NEW (use these instead)
+   ADMIN_PASSWORD=yourpassword
+   NOTION_PAGE_URL=https://notion.so/your-page
+   ```
+
+**3. Deploy:**
+   ```bash
+   git pull  # Get latest code
+   git push  # Trigger Vercel deployment
+   ```
+
+**Why This Matters:**
+- **Before**: Your admin password and Notion URL were visible in browser source code
+- **After**: Both are server-side only and never exposed to visitors
+
+---
+
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
@@ -288,7 +350,24 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📄 License
+## � Future Roadmap
+
+Planned features and improvements:
+
+### Performance & Scalability
+- **Pagination / Load More**: The home page currently loads all posts at once. Adding a "Load More" button or full pagination will be crucial for performance as your blog grows and you have 50+ posts.
+
+### Audience Growth
+- **Newsletter Subscription**: A clean, customizable UI component for email capture that can be easily integrated with popular services like Mailchimp, ConvertKit, or Substack.
+
+### Enhanced Search
+- **Dedicated Search Page**: A dedicated `/search` route with shareable URLs (e.g., `/search?q=react`) for better SEO and the ability to link directly to search results.
+
+> **Want to contribute?** These features are open for community contributions! Check the [GitHub repository](https://github.com/legionsa/ezBlog) for issues and pull requests.
+
+---
+
+## �📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
 
