@@ -80,8 +80,8 @@ export function getSiteSettings(): SiteSettings {
         adminPassword: localSettings.adminPassword || '',
 
         // Notion settings: env var > localStorage
-        notionPageUrl: process.env.NEXT_PUBLIC_NOTION_PAGE_URL || localSettings.notionPageUrl,
-        enableNotionSync: process.env.NEXT_PUBLIC_NOTION_PAGE_URL ? true : localSettings.enableNotionSync,
+        notionPageUrl: process.env.NOTION_PAGE_URL || localSettings.notionPageUrl,
+        enableNotionSync: process.env.NOTION_PAGE_URL ? true : localSettings.enableNotionSync,
 
         // Giscus settings: localStorage > default
         giscusConfig: localSettings.giscusConfig || defaultSettings.giscusConfig,

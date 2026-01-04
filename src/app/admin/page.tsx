@@ -144,7 +144,7 @@ export default function AdminDashboard() {
                             ⚠ Notion not configured
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Set <code className="rounded bg-muted px-1">NEXT_PUBLIC_NOTION_PAGE_URL</code> in Vercel to sync content.
+                            Set <code className="rounded bg-muted px-1">NOTION_PAGE_URL</code> in Vercel to sync content.
                         </p>
                     </CardContent>
                 </Card>
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
                         <div className="py-8 text-center">
                             <p className="text-muted-foreground">No posts synced from Notion yet.</p>
                             <p className="text-sm text-muted-foreground mt-2">
-                                Configure <code className="rounded bg-muted px-1">NEXT_PUBLIC_NOTION_PAGE_URL</code> to get started.
+                                Configure <code className="rounded bg-muted px-1">NOTION_PAGE_URL</code> to get started.
                             </p>
                         </div>
                     ) : (

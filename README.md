@@ -43,7 +43,8 @@ In Vercel → Settings → Environment Variables:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_NOTION_PAGE_URL` | ✅ | Your Notion database URL |
+| `NOTION_PAGE_URL` | ✅ | Your Notion database URL (server-side) |
+| `ADMIN_PASSWORD` | ✅ | Admin dashboard password (server-side) |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | Your site URL (e.g., `https://yourblog.com`) |
 | `NEXT_PUBLIC_SITE_TITLE` | | Site title (default: `ezBlog`) |
 

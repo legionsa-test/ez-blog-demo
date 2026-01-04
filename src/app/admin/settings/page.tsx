@@ -241,11 +241,11 @@ export default function SettingsPage() {
                         <div className="grid gap-2 font-mono text-xs">
                             <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
                                 <div>
-                                    <span className="text-muted-foreground">NEXT_PUBLIC_ADMIN_PASSWORD</span>
-                                    <span className="text-red-500 ml-2">*required</span>
+                                    <span className="text-muted-foreground">ADMIN_PASSWORD</span>
+                                    <span className="text-red-500 ml-2">*required (server-side)</span>
                                 </div>
-                                <span className="text-green-600 font-semibold">
-                                    {process.env.NEXT_PUBLIC_ADMIN_PASSWORD ? '✓ Set' : '✗ Not set'}
+                                <span className="text-amber-600 font-semibold text-xs">
+                                    🔒 Secure (not visible to client)
                                 </span>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
@@ -292,7 +292,7 @@ export default function SettingsPage() {
                                 </span>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
-                                <span className="text-muted-foreground">NEXT_PUBLIC_NOTION_PAGE_URL</span>
+                                <span className="text-muted-foreground">NOTION_PAGE_URL</span>
                                 <span className="text-green-600 font-semibold">
                                     {siteSettings.notionPageUrl ? '✓ Configured' : '✗ Not set'}
                                 </span>

@@ -1107,7 +1107,7 @@ export async function fetchNotionData(pageUrl: string) {
 
 // Fetch and cache Notion content
 export async function fetchNotionContent() {
-    const pageUrl = process.env.NEXT_PUBLIC_NOTION_PAGE_URL;
+    const pageUrl = process.env.NOTION_PAGE_URL;
     if (!pageUrl) {
         return { posts: [], pages: [], source: 'none' };
     }

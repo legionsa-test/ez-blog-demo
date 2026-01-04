@@ -118,7 +118,7 @@ export default function PagesAdminPage() {
                             <FileText className="mx-auto h-12 w-12 opacity-50" />
                             <p className="mt-4">Notion not configured</p>
                             <p className="text-sm">
-                                Set <code className="rounded bg-muted px-1">NEXT_PUBLIC_NOTION_PAGE_URL</code> in Vercel.
+                                Set <code className="rounded bg-muted px-1">NOTION_PAGE_URL</code> in Vercel.
                             </p>
                         </div>
                     ) : pages.length === 0 ? (

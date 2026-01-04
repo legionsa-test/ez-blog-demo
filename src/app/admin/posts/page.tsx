@@ -157,7 +157,7 @@ export default function PostsPage() {
                         <div className="py-8 text-center">
                             <p className="text-muted-foreground">Notion not configured.</p>
                             <p className="text-sm text-muted-foreground mt-2">
-                                Set <code className="rounded bg-muted px-1">NEXT_PUBLIC_NOTION_PAGE_URL</code> in Vercel.
+                                Set <code className="rounded bg-muted px-1">NOTION_PAGE_URL</code> in Vercel.
                             </p>
                         </div>
                     ) : filteredPosts.length === 0 ? (
