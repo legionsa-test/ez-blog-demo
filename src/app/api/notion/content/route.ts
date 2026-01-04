@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { fetchNotionContent } from '@/lib/notion';
 
 // GET handler - returns cached or fresh Notion content
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
         const result = await fetchNotionContent();

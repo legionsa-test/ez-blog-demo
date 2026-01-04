@@ -42,12 +42,12 @@ export default function SettingsPage() {
     const [isSyncingNotion, setIsSyncingNotion] = useState(false);
     const [notionSyncResult, setNotionSyncResult] = useState<{ count: number; type: string } | null>(null);
     const [serverEnvStatus, setServerEnvStatus] = useState<{
-        notionPageUrl: boolean;
-        adminPassword: boolean;
-        giscusRepo: boolean;
-        giscusRepoId: boolean;
-        giscusCategory: boolean;
-        giscusCategoryId: boolean;
+        NOTION_PAGE_URL: boolean;
+        ADMIN_PASSWORD: boolean;
+        GISCUS_REPO: boolean;
+        GISCUS_REPO_ID: boolean;
+        GISCUS_CATEGORY: boolean;
+        GISCUS_CATEGORY_ID: boolean;
     } | null>(null);
 
     useEffect(() => {
@@ -62,12 +62,12 @@ export default function SettingsPage() {
             .then(res => res.json())
             .then(data => setServerEnvStatus(data))
             .catch(() => setServerEnvStatus({
-                notionPageUrl: false,
-                adminPassword: false,
-                giscusRepo: false,
-                giscusRepoId: false,
-                giscusCategory: false,
-                giscusCategoryId: false
+                NOTION_PAGE_URL: false,
+                ADMIN_PASSWORD: false,
+                GISCUS_REPO: false,
+                GISCUS_REPO_ID: false,
+                GISCUS_CATEGORY: false,
+                GISCUS_CATEGORY_ID: false
             }));
     }, []);
 
@@ -264,8 +264,8 @@ export default function SettingsPage() {
                                     <span className="text-muted-foreground">ADMIN_PASSWORD</span>
                                     <span className="text-red-500 ml-2">*required (server-side)</span>
                                 </div>
-                                <span className={`font-semibold text-xs ${serverEnvStatus?.adminPassword ? 'text-green-600' : 'text-amber-500'}`}>
-                                    {serverEnvStatus?.adminPassword ? '✓ Configured (Secure)' : '✗ Not set'}
+                                <span className={`font-semibold text-xs ${serverEnvStatus?.ADMIN_PASSWORD ? 'text-green-600' : 'text-amber-500'}`}>
+                                    {serverEnvStatus?.ADMIN_PASSWORD ? '✓ Configured (Secure)' : '✗ Not set'}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
@@ -310,8 +310,8 @@ export default function SettingsPage() {
                                     <span className="text-muted-foreground">NOTION_PAGE_URL</span>
                                     <span className="text-red-500 ml-2">*server-side</span>
                                 </div>
-                                <span className={`font-semibold ${serverEnvStatus?.notionPageUrl ? 'text-green-600' : 'text-amber-500'}`}>
-                                    {serverEnvStatus?.notionPageUrl ? '✓ Configured' : '✗ Not set'}
+                                <span className={`font-semibold ${serverEnvStatus?.NOTION_PAGE_URL ? 'text-green-600' : 'text-amber-500'}`}>
+                                    {serverEnvStatus?.NOTION_PAGE_URL ? '✓ Configured' : '✗ Not set'}
                                 </span>
                             </div>
                         </div>
@@ -422,8 +422,8 @@ export default function SettingsPage() {
                                 <span className="text-muted-foreground">GISCUS_REPO</span>
                                 <span className="text-red-500 ml-2">*server-side</span>
                             </div>
-                            <span className={`font-semibold text-xs ${serverEnvStatus?.giscusRepo ? 'text-green-600' : 'text-amber-500'}`}>
-                                {serverEnvStatus?.giscusRepo ? '✓ Configured' : '✗ Not set'}
+                            <span className={`font-semibold text-xs ${serverEnvStatus?.GISCUS_REPO ? 'text-green-600' : 'text-amber-500'}`}>
+                                {serverEnvStatus?.GISCUS_REPO ? '✓ Configured' : '✗ Not set'}
                             </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
@@ -431,8 +431,8 @@ export default function SettingsPage() {
                                 <span className="text-muted-foreground">GISCUS_REPO_ID</span>
                                 <span className="text-red-500 ml-2">*server-side</span>
                             </div>
-                            <span className={`font-semibold text-xs ${serverEnvStatus?.giscusRepoId ? 'text-green-600' : 'text-amber-500'}`}>
-                                {serverEnvStatus?.giscusRepoId ? '✓ Configured' : '✗ Not set'}
+                            <span className={`font-semibold text-xs ${serverEnvStatus?.GISCUS_REPO_ID ? 'text-green-600' : 'text-amber-500'}`}>
+                                {serverEnvStatus?.GISCUS_REPO_ID ? '✓ Configured' : '✗ Not set'}
                             </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
@@ -440,8 +440,8 @@ export default function SettingsPage() {
                                 <span className="text-muted-foreground">GISCUS_CATEGORY</span>
                                 <span className="text-red-500 ml-2">*server-side</span>
                             </div>
-                            <span className={`font-semibold text-xs ${serverEnvStatus?.giscusCategory ? 'text-green-600' : 'text-amber-500'}`}>
-                                {serverEnvStatus?.giscusCategory ? '✓ Configured' : '✗ Not set'}
+                            <span className={`font-semibold text-xs ${serverEnvStatus?.GISCUS_CATEGORY ? 'text-green-600' : 'text-amber-500'}`}>
+                                {serverEnvStatus?.GISCUS_CATEGORY ? '✓ Configured' : '✗ Not set'}
                             </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-muted rounded-lg border">
@@ -449,8 +449,8 @@ export default function SettingsPage() {
                                 <span className="text-muted-foreground">GISCUS_CATEGORY_ID</span>
                                 <span className="text-red-500 ml-2">*server-side</span>
                             </div>
-                            <span className={`font-semibold text-xs ${serverEnvStatus?.giscusCategoryId ? 'text-green-600' : 'text-amber-500'}`}>
-                                {serverEnvStatus?.giscusCategoryId ? '✓ Configured' : '✗ Not set'}
+                            <span className={`font-semibold text-xs ${serverEnvStatus?.GISCUS_CATEGORY_ID ? 'text-green-600' : 'text-amber-500'}`}>
+                                {serverEnvStatus?.GISCUS_CATEGORY_ID ? '✓ Configured' : '✗ Not set'}
                             </span>
                         </div>
                     </div>
