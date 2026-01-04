@@ -18,8 +18,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { TiptapEditor } from '@/components/editor/tiptap-editor';
-import { UnsplashPicker } from '@/components/editor/unsplash-picker';
-import { isUnsplashConfigured } from '@/lib/unsplash';
 import { savePost } from '@/lib/storage';
 import { getCategories, Category } from '@/lib/categories';
 import { getAuthors, getPrimaryAuthor } from '@/lib/authors';
@@ -57,10 +55,8 @@ export default function NewPostPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [unsplashOpen, setUnsplashOpen] = useState(false);
     const [coverImageSize, setCoverImageSize] = useState<'small' | 'big' | 'hidden'>('small');
     const [coverImageAlt, setCoverImageAlt] = useState('');
-    const [coverImageTab, setCoverImageTab] = useState<'url' | 'unsplash'>('url');
 
     // Load categories and authors
     useEffect(() => {
@@ -284,68 +280,23 @@ export default function NewPostPage() {
                             <CardTitle className="text-base">Cover Image</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Tabs for URL or Unsplash */}
-                            <div className="flex rounded-lg border border-border p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setCoverImageTab('url')}
-                                    className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'url'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    Direct URL
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setCoverImageTab('unsplash')}
-                                    className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'unsplash'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    Unsplash
-                                </button>
-                            </div>
-
-                            {/* URL Input */}
-                            {coverImageTab === 'url' && (
-                                <div className="space-y-3">
+                            <div className="space-y-3">
+                                <Input
+                                    value={coverImage}
+                                    onChange={(e) => setCoverImage(e.target.value)}
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                                <div className="space-y-1">
+                                    <Label htmlFor="cover-alt" className="text-xs text-muted-foreground">Alt Text</Label>
                                     <Input
-                                        value={coverImage}
-                                        onChange={(e) => setCoverImage(e.target.value)}
-                                        placeholder="https://example.com/image.jpg"
+                                        id="cover-alt"
+                                        value={coverImageAlt}
+                                        onChange={(e) => setCoverImageAlt(e.target.value)}
+                                        placeholder="Describe the image for accessibility"
+                                        className="h-8 text-sm"
                                     />
-                                    <div className="space-y-1">
-                                        <Label htmlFor="cover-alt" className="text-xs text-muted-foreground">Alt Text</Label>
-                                        <Input
-                                            id="cover-alt"
-                                            value={coverImageAlt}
-                                            onChange={(e) => setCoverImageAlt(e.target.value)}
-                                            placeholder="Describe the image for accessibility"
-                                            className="h-8 text-sm"
-                                        />
-                                    </div>
                                 </div>
-                            )}
-
-                            {/* Unsplash Search Button */}
-                            {coverImageTab === 'unsplash' && (
-                                isUnsplashConfigured() ? (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                        onClick={() => setUnsplashOpen(true)}
-                                    >
-                                        <ImageIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-                                        Search Unsplash
-                                    </Button>
-                                ) : (
-                                    <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                                        Unsplash is not configured. Please add your credentials in .env
-                                    </div>
-                                )
-                            )}
+                            </div>
 
                             {/* Image Preview */}
                             {coverImage && (
@@ -513,17 +464,7 @@ export default function NewPostPage() {
                 </div>
             </div>
 
-            {/* Unsplash Picker */}
-            {/* Unsplash Picker */}
-            <UnsplashPicker
-                open={unsplashOpen}
-                onOpenChange={setUnsplashOpen}
-                onSelect={(photo) => {
-                    setCoverImage(photo.urls.regular);
-                    setCoverImageAlt(photo.alt_description || '');
-                    setUnsplashOpen(false);
-                }}
-            />
+
         </div>
     );
 }
