@@ -30,6 +30,11 @@ const Modal = dynamic(
     { ssr: false }
 );
 
+const Code = dynamic(
+    () => import('react-notion-x/build/third-party/code').then((m) => m.Code),
+    { ssr: false }
+);
+
 interface NotionPageRendererProps {
     recordMap: ExtendedRecordMap;
     rootPageId?: string;
@@ -306,6 +311,7 @@ export function NotionPageRenderer({
                 showTableOfContents={showTableOfContents}
                 minTableOfContentsItems={minTableOfContentsItems}
                 components={{
+                    Code,
                     Collection,
                     Modal,
                     nextImage: Image,
