@@ -44,7 +44,6 @@ import {
 
 interface EditorToolbarProps {
     editor: Editor | null;
-    onUnsplashClick: () => void;
     onImageUrlClick: () => void;
     onYouTubeClick?: () => void;
     onTableClick?: () => void;
@@ -53,7 +52,6 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({
     editor,
-    onUnsplashClick,
     onImageUrlClick,
     onYouTubeClick,
     onTableClick,
@@ -247,10 +245,7 @@ export function EditorToolbar({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuItem onClick={onUnsplashClick}>
-                            <ImagePlus className="mr-2 h-4 w-4" aria-hidden="true" />
-                            From Unsplash
-                        </DropdownMenuItem>
+
                         <DropdownMenuItem onClick={onImageUrlClick}>
                             <LinkIcon className="mr-2 h-4 w-4" aria-hidden="true" />
                             From URL

@@ -19,8 +19,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { TiptapEditor } from '@/components/editor/tiptap-editor';
-import { UnsplashPicker } from '@/components/editor/unsplash-picker';
-import { isUnsplashConfigured } from '@/lib/unsplash';
 import { getPostById, savePost, deletePost } from '@/lib/storage';
 import { Post } from '@/lib/types';
 import { toast } from 'sonner';
@@ -40,10 +38,8 @@ export default function EditPostPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [unsplashOpen, setUnsplashOpen] = useState(false);
     const [coverImageSize, setCoverImageSize] = useState<'small' | 'big' | 'hidden'>('small');
     const [coverImageAlt, setCoverImageAlt] = useState('');
-    const [coverImageTab, setCoverImageTab] = useState<'url' | 'unsplash'>('url');
 
     useEffect(() => {
         const foundPost = getPostById(postId);
@@ -202,62 +198,23 @@ export default function EditPostPage() {
                             <CardTitle className="text-base">Cover Image</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Tabs for URL or Unsplash */}
-                            <div className="flex rounded-lg border border-border p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setCoverImageTab('url')}
-                                    className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'url'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    Direct URL
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setCoverImageTab('unsplash')}
-                                    className={`flex-1 rounded-md px-3 py-1.5 text-sm transition-colors ${coverImageTab === 'unsplash'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    Unsplash
-                                </button>
-                            </div>
-
-                            {/* URL Input */}
-                            {coverImageTab === 'url' && (
-                                <div className="space-y-3">
+                            <div className="space-y-3">
+                                <Input
+                                    value={coverImage}
+                                    onChange={(e) => setCoverImage(e.target.value)}
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                                <div className="space-y-1">
+                                    <Label htmlFor="cover-alt" className="text-xs text-muted-foreground">Alt Text</Label>
                                     <Input
-                                        value={coverImage}
-                                        onChange={(e) => setCoverImage(e.target.value)}
-                                        placeholder="https://example.com/image.jpg"
+                                        id="cover-alt"
+                                        value={coverImageAlt}
+                                        onChange={(e) => setCoverImageAlt(e.target.value)}
+                                        placeholder="Describe the image for accessibility"
+                                        className="h-8 text-sm"
                                     />
-                                    <div className="space-y-1">
-                                        <Label htmlFor="cover-alt" className="text-xs text-muted-foreground">Alt Text</Label>
-                                        <Input
-                                            id="cover-alt"
-                                            value={coverImageAlt}
-                                            onChange={(e) => setCoverImageAlt(e.target.value)}
-                                            placeholder="Describe the image for accessibility"
-                                            className="h-8 text-sm"
-                                        />
-                                    </div>
                                 </div>
-                            )}
-
-                            {/* Unsplash Search Button */}
-                            {coverImageTab === 'unsplash' && isUnsplashConfigured() && (
-                                <Button
-                                    variant="outline"
-                                    className="w-full"
-                                    onClick={() => setUnsplashOpen(true)}
-                                >
-                                    <ImageIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-                                    Search Unsplash
-                                </Button>
-                            )}
+                            </div>
 
                             {/* Image Preview */}
                             {coverImage && (
@@ -363,16 +320,7 @@ export default function EditPostPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Unsplash Picker */}
-            <UnsplashPicker
-                open={unsplashOpen}
-                onOpenChange={setUnsplashOpen}
-                onSelect={(photo) => {
-                    setCoverImage(photo.urls.regular);
-                    setCoverImageAlt(photo.alt_description || '');
-                    setUnsplashOpen(false);
-                }}
-            />
+
         </div>
     );
 }

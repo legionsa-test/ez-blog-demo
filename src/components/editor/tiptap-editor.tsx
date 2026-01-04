@@ -15,7 +15,7 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import { EditorToolbar } from './toolbar';
 import { useState } from 'react';
-import { UnsplashPicker } from './unsplash-picker';
+
 import { ImageUrlDialog } from './image-url-dialog';
 import { YouTubeDialog } from './youtube-dialog';
 import { trackMediaUsage } from '@/lib/media';
@@ -29,7 +29,6 @@ interface TiptapEditorProps {
 }
 
 export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
-    const [showUnsplash, setShowUnsplash] = useState(false);
     const [showImageUrl, setShowImageUrl] = useState(false);
     const [showYouTube, setShowYouTube] = useState(false);
 
@@ -135,7 +134,6 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
         <div className="overflow-hidden rounded-lg border border-input bg-background">
             <EditorToolbar
                 editor={editor}
-                onUnsplashClick={() => setShowUnsplash(true)}
                 onImageUrlClick={() => setShowImageUrl(true)}
                 onYouTubeClick={() => setShowYouTube(true)}
                 onTableClick={insertTable}
@@ -143,15 +141,7 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
             />
             <EditorContent editor={editor} />
 
-            {/* Unsplash Picker Modal */}
-            <UnsplashPicker
-                open={showUnsplash}
-                onOpenChange={setShowUnsplash}
-                onSelect={(photo) => {
-                    handleInsertImage(photo.urls.regular, photo.alt_description || '');
-                    setShowUnsplash(false);
-                }}
-            />
+
 
             {/* Image URL Dialog */}
             <ImageUrlDialog
