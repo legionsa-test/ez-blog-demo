@@ -26,8 +26,9 @@ interface NotionPage {
 export default function PagesAdminPage() {
     const [pages, setPages] = useState<NotionPage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [notionUrl, setNotionUrl] = useState<string | null>(null);
+    const [notionUrl, setNotionUrl] = useState<string | undefined>(undefined);
     const [lastSync, setLastSync] = useState<string | null>(null);
+    const [isNotionConfigured, setIsNotionConfigured] = useState(false);
 
     useEffect(() => {
         loadPages();
@@ -37,9 +38,20 @@ export default function PagesAdminPage() {
         setIsLoading(true);
 
         const settings = getSiteSettings();
-        setNotionUrl(settings.notionPageUrl || null);
+        setNotionUrl(settings.notionPageUrl || undefined);
 
-        if (settings.notionPageUrl) {
+        // Check server-side configuration status
+        let configured = false;
+        try {
+            const envRes = await fetch('/api/env/status');
+            const envStatus = await envRes.json();
+            configured = !!envStatus.NOTION_PAGE_URL;
+            setIsNotionConfigured(configured);
+        } catch (e) {
+            console.error('Failed to check env status', e);
+        }
+
+        if (configured) {
             try {
                 const response = await fetch('/api/notion/content');
                 const data = await response.json();
@@ -113,7 +125,7 @@ export default function PagesAdminPage() {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    {!notionUrl ? (
+                    {!isNotionConfigured ? (
                         <div className="text-center py-8 text-muted-foreground">
                             <FileText className="mx-auto h-12 w-12 opacity-50" />
                             <p className="mt-4">Notion not configured</p>

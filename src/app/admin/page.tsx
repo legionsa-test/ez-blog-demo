@@ -26,6 +26,7 @@ export default function AdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [viewCounts, setViewCounts] = useState<{ [slug: string]: number }>({});
     const [settings, setSettings] = useState<any>(null);
+    const [isNotionConfigured, setIsNotionConfigured] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -38,7 +39,18 @@ export default function AdminDashboard() {
             setViewCounts(counts);
 
             // Fetch Notion content from server API
-            if (siteSettings.notionPageUrl) {
+            // Check server-side configuration status
+            let configured = false;
+            try {
+                const envRes = await fetch('/api/env/status');
+                const envStatus = await envRes.json();
+                configured = !!envStatus.NOTION_PAGE_URL;
+                setIsNotionConfigured(configured);
+            } catch (e) {
+                console.error('Failed to check env status', e);
+            }
+
+            if (configured) {
                 try {
                     const response = await fetch('/api/notion/content');
                     const data = await response.json();
@@ -111,7 +123,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Notion Sync Status */}
-            {settings?.notionPageUrl ? (
+            {isNotionConfigured ? (
                 <Card className="border-green-500/50 bg-green-500/5">
                     <CardContent className="flex items-center justify-between py-4">
                         <div className="flex items-center gap-3">
@@ -129,12 +141,14 @@ export default function AdminDashboard() {
                                 </p>
                             </div>
                         </div>
-                        <Button variant="outline" size="sm" asChild>
-                            <a href={settings.notionPageUrl} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="mr-2 h-4 w-4" />
-                                Open Notion
-                            </a>
-                        </Button>
+                        {settings?.notionPageUrl && (
+                            <Button variant="outline" size="sm" asChild>
+                                <a href={settings.notionPageUrl} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    Open Notion
+                                </a>
+                            </Button>
+                        )}
                     </CardContent>
                 </Card>
             ) : (

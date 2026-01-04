@@ -25,8 +25,9 @@ export default function PostsPage() {
     const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
     const [isLoading, setIsLoading] = useState(true);
     const [viewCounts, setViewCounts] = useState<{ [slug: string]: number }>({});
-    const [notionUrl, setNotionUrl] = useState<string | null>(null);
+    const [notionUrl, setNotionUrl] = useState<string | undefined>(undefined);
     const [lastSync, setLastSync] = useState<string | null>(null);
+    const [isNotionConfigured, setIsNotionConfigured] = useState(false);
 
     useEffect(() => {
         loadPosts();
@@ -44,12 +45,23 @@ export default function PostsPage() {
         setIsLoading(true);
 
         const settings = getSiteSettings();
-        setNotionUrl(settings.notionPageUrl || null);
+        setNotionUrl(settings.notionPageUrl || undefined);
 
         const counts = getViewCounts();
         setViewCounts(counts);
 
-        if (settings.notionPageUrl) {
+        // Check server-side configuration status
+        let configured = false;
+        try {
+            const envRes = await fetch('/api/env/status');
+            const envStatus = await envRes.json();
+            configured = !!envStatus.NOTION_PAGE_URL;
+            setIsNotionConfigured(configured);
+        } catch (e) {
+            console.error('Failed to check env status', e);
+        }
+
+        if (configured) {
             try {
                 const response = await fetch('/api/notion/content');
                 const data = await response.json();
@@ -153,7 +165,7 @@ export default function PostsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {!notionUrl ? (
+                    {!isNotionConfigured ? (
                         <div className="py-8 text-center">
                             <p className="text-muted-foreground">Notion not configured.</p>
                             <p className="text-sm text-muted-foreground mt-2">
