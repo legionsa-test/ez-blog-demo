@@ -9,7 +9,7 @@ const defaultSettings: SiteSettings = {
     title: 'ezBlog',
     icon: '✍️',
     description: 'A modern, headless blog CMS',
-    unsplashApiKey: '',
+
     adminPassword: '',
     showFooter: true,
     footerText: '© {year} ezBlog. Built with Next.js and shadcn/ui.',
@@ -73,8 +73,7 @@ export function getSiteSettings(): SiteSettings {
             ? process.env.NEXT_PUBLIC_SHOW_RSS === 'true'
             : localSettings.showRssFeed ?? defaultSettings.showRssFeed,
 
-        // Unsplash API key: env var > localStorage
-        unsplashApiKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || localSettings.unsplashApiKey || '',
+
 
         // Admin password handled separately
         adminPassword: localSettings.adminPassword || '',
@@ -98,16 +97,7 @@ export function saveSiteSettings(settings: Partial<SiteSettings>): SiteSettings 
     return getSiteSettings();
 }
 
-// Check if Unsplash API is configured
-export function hasUnsplashApiKey(): boolean {
-    const settings = getSiteSettings();
-    return !!settings.unsplashApiKey;
-}
 
-// Get Unsplash API key
-export function getUnsplashApiKey(): string {
-    return getSiteSettings().unsplashApiKey;
-}
 
 // Check if a setting is controlled by environment variable
 export function isSettingFromEnv(setting: keyof SiteSettings): boolean {
@@ -120,7 +110,7 @@ export function isSettingFromEnv(setting: keyof SiteSettings): boolean {
         showFooter: process.env.NEXT_PUBLIC_SHOW_FOOTER,
         footerText: process.env.NEXT_PUBLIC_FOOTER_TEXT,
         showRssFeed: process.env.NEXT_PUBLIC_SHOW_RSS,
-        unsplashApiKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
+
     };
     return !!envMap[setting];
 }
