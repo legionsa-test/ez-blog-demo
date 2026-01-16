@@ -117,8 +117,10 @@ If you're upgrading from an older version, rename these environment variables:
 ## 🔗 Notion Setup
 
 ### 1. Create Database
+Duplicate this database [Notion Template](https://hikalvin.notion.site/2db27bd11ca0814eae88d120ff46fbf5?v=2db27bd11ca08102b9f5000cf7f5bf97&source=copy_link). 
 
-Create a Notion database with these properties:
+
+Or you can create a Notion database with these properties:
 
 | Property | Type | Description |
 |----------|------|-------------|
